@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق مراجعة العلوم المتكاملة - مستر ناصر رحيم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f0f4f8;
+            color: #1e293b;
+            transition: font-size 0.2s ease;
+        }
+        .math-ltr {
+            direction: ltr;
+            display: inline-block;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0284c7;
+            border-radius: 4px;
+        }
+        /* Zoom Modal Transitions */
+        #zoomModal {
+            transition: opacity 0.25s ease;
+        }
+        .tab-active {
+            background-color: #0284c7;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3);
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(-4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-l from-sky-900 via-sky-800 to-cyan-800 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/25 shadow-inner">
+                    <svg class="w-7 h-7 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl md:text-2xl font-black tracking-wide text-white">مراجعة العلوم المتكاملة - شهر نوفمبر</h1>
+                    <p class="text-xs sm:text-sm text-amber-300 font-bold">إعداد وتقديم: مستر ناصر رحيم | تقييمات الوزارة كاملة بالنص</p>
+                </div>
+            </div>
+
+            <!-- Font Zoom Controls & Score -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div class="flex items-center bg-white/10 rounded-xl p-1 border border-white/20" title="تكبير وتصغير خط الأسئلة">
+                    <button onclick="changeFontSize(-1)" class="px-2.5 py-1 rounded-lg hover:bg-white/20 font-bold text-sm" aria-label="تصغير الخط">A-</button>
+                    <span id="fontSizeIndicator" class="px-2 text-xs font-bold text-sky-100">100%</span>
+                    <button onclick="changeFontSize(1)" class="px-2.5 py-1 rounded-lg hover:bg-white/20 font-bold text-sm" aria-label="تكبير الخط">A+</button>
+                </div>
+                <div class="bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                    <span>الدرجة:</span>
+                    <span id="scoreDisplay" class="text-amber-300 font-black text-base">0</span>
+                    <span>/ 56</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation & Filters -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[72px] sm:top-[76px] z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <!-- Main Mode Tabs -->
+            <div class="grid grid-cols-2 sm:flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+                <button id="tabMcq" onclick="switchTab('mcq')" class="tab-active px-4 py-2.5 rounded-xl font-bold text-sm sm:text-base transition flex items-center justify-center gap-2">
+                    <span>الاختيار من متعدد</span>
+                    <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">56 سؤال</span>
+                </button>
+                <button id="tabEssay" onclick="switchTab('essay')" class="text-slate-700 hover:bg-white/60 px-4 py-2.5 rounded-xl font-bold text-sm sm:text-base transition flex items-center justify-center gap-2">
+                    <span>الأسئلة المقالية المجابة</span>
+                    <span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full text-xs">63 سؤال</span>
+                </button>
+            </div>
+
+            <!-- Lesson Filter & Search -->
+            <div class="flex flex-col sm:flex-row gap-2 flex-1 md:max-w-xl">
+                <select id="lessonFilter" onchange="renderContent()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-sky-500 focus:border-sky-500 block p-2.5 font-semibold">
+                    <option value="all">كل الدروس والتقييمات (4 دروس كاملة)</option>
+                    <option value="1">1- التكيفات البيولوجية وتأثير الغازات في البيئة المائية</option>
+                    <option value="2">2- تأثير الضوء والإشعاع الشمسي والضغط المائي</option>
+                    <option value="3">3- التوازن البيئي ودور الإنسان في استدامة الحياة المائية</option>
+                    <option value="4">4- مكونات وطبقات الغلاف الجوي (الوحدة الثانية)</option>
+                </select>
+                <input type="text" id="searchInput" oninput="renderContent()" placeholder="ابحث في نص السؤال أو الإجابة..." class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-6 flex-1">
+        <!-- Info Banner -->
+        <div class="bg-sky-50 border-r-4 border-sky-600 p-4 rounded-xl mb-6 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div class="text-sm text-sky-900">
+                <span class="font-bold">تنبيه:</span> جميع الأسئلة منقولة نصاً من تقييمات الوزارة الرسمية. اضغط على أي رسم بياني لتكبيره (Zoom) وفحص القيم بدقة.
+            </div>
+            <button id="resetQuizBtn" onclick="resetQuiz()" class="text-xs bg-white border border-sky-300 text-sky-700 hover:bg-sky-100 px-3 py-1.5 rounded-lg font-bold shadow-sm transition">
+                إعادة ضبط الاختبار
+            </button>
+        </div>
+
+        <!-- Questions List -->
+        <div id="questionsContainer" class="space-y-6"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-6 mt-12 border-t border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-base sm:text-lg font-bold text-white mb-1">تطبيق المراجعة النهائية في العلوم المتكاملة - شهر نوفمبر</p>
+            <p class="text-amber-400 font-bold text-sm">إعداد: مستر ناصر رحيم | جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Image / SVG Zoom Modal -->
+    <div id="zoomModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between">
+                <h3 id="zoomTitle" class="font-bold text-sm sm:text-base">معاينة الرسم البياني</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="adjustSvgZoom(-0.25)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg font-bold text-sm" title="تصغير">-</button>
+                    <span id="svgZoomLevel" class="text-xs font-mono bg-slate-900 px-2 py-1 rounded">100%</span>
+                    <button onclick="adjustSvgZoom(0.25)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg font-bold text-sm" title="تكبير">+</button>
+                    <button onclick="resetSvgZoom()" class="bg-sky-600 hover:bg-sky-500 px-2.5 py-1 rounded-lg text-xs font-bold">إعادة ضبط</button>
+                    <button onclick="closeZoomModal()" class="bg-rose-600 hover:bg-rose-500 px-3 py-1 rounded-lg font-bold text-sm mr-2">إغلاق ✕</button>
+                </div>
+            </div>
+            <div id="zoomViewport" class="flex-1 overflow-auto p-6 bg-slate-50 flex items-center justify-center cursor-grab active:cursor-grabbing min-h-[350px]">
+                <div id="zoomContent" class="transition-transform duration-200 origin-center"></div>
+            </div>
+            <div class="bg-slate-100 px-4 py-2 text-center text-xs text-slate-600 font-semibold border-t">
+                استخدم أزرار (+) و (-) بالأعلى أو عجلة الماوس لتكبير وتصغير الرسم البياني بدقة
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. SVG DIAGRAMS (EXACT FROM PDF)
+        // ==========================================
+        const svgDiagrams = {
+            co2_solubility: {
+                title: "منحنى ذوبانية غاز ثاني أكسيد الكربون (CO2) مع درجة الحرارة",
+                svg: `
+                <svg viewBox="0 0 520 360" class="w-full max-w-lg mx-auto bg-white rounded-xl border border-slate-200 p-2 select-none">
+                    <!-- Grid Lines -->
+                    <g stroke="#e2e8f0" stroke-width="1">
+                        <line x1="90" y1="40" x2="480" y2="40"/>
+                        <line x1="90" y1="72.5" x2="480" y2="72.5"/>
+                        <line x1="90" y1="105" x2="480" y2="105"/>
+                        <line x1="90" y1="137.5" x2="480" y2="137.5"/>
+                        <line x1="90" y1="170" x2="480" y2="170"/>
+                        <line x1="90" y1="202.5" x2="480" y2="202.5"/>
+                        <line x1="90" y1="235" x2="480" y2="235"/>
+                        <line x1="90" y1="267.5" x2="480" y2="267.5"/>
+                    </g>
+                    <!-- Axes -->
+                    <line x1="90" y1="30" x2="90" y2="300" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="90" y1="300" x2="490" y2="300" stroke="#1e293b" stroke-width="2.5"/>
+                    
+                    <!-- Y-Axis Ticks & Labels (0 to 4.0) -->
+                    <g font-family="Arial, sans-serif" font-size="13" fill="#1e293b" text-anchor="end" font-weight="bold">
+                        <text x="82" y="45">4.0</text><line x1="85" y1="40" x2="90" y2="40" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="77">3.5</text><line x1="85" y1="72.5" x2="90" y2="72.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="110">3.0</text><line x1="85" y1="105" x2="90" y2="105" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="142">2.5</text><line x1="85" y1="137.5" x2="90" y2="137.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="175">2.0</text><line x1="85" y1="170" x2="90" y2="170" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="207">1.5</text><line x1="85" y1="202.5" x2="90" y2="202.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="240">1.0</text><line x1="85" y1="235" x2="90" y2="235" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="272">0.5</text><line x1="85" y1="267.5" x2="90" y2="267.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="305">0</text>
+                    </g>
+
+                    <!-- X-Axis Ticks & Labels (0 to 60) -->
+                    <g font-family="Arial, sans-serif" font-size="13" fill="#1e293b" text-anchor="middle" font-weight="bold">
+                        <text x="90" y="320">0</text>
+                        <text x="155" y="320">10</text><line x1="155" y1="300" x2="155" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="220" y="320">20</text><line x1="220" y1="300" x2="220" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="285" y="320">30</text><line x1="285" y1="300" x2="285" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="350" y="320">40</text><line x1="350" y1="300" x2="350" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="415" y="320">50</text><line x1="415" y1="300" x2="415" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="480" y="320">60</text><line x1="480" y1="300" x2="480" y2="306" stroke="#1e293b" stroke-width="2"/>
+                    </g>
+
+                    <!-- Dashed Reference Lines (Exact from PDF) -->
+                    <!-- At 20°C -> ~1.7 -->
+                    <line x1="90" y1="189.5" x2="220" y2="189.5" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <line x1="220" y1="189.5" x2="220" y2="300" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <!-- At 50°C -> ~0.75 -->
+                    <line x1="90" y1="251.25" x2="415" y2="251.25" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <line x1="415" y1="251.25" x2="415" y2="300" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+
+                    <!-- Curve: (0, 3.35) -> y=82.25; (20, 1.7) -> y=189.5; (50, 0.75) -> y=251.25; (60, 0.6) -> y=261 -->
+                    <path d="M 90 82.25 Q 155 145, 220 189.5 T 415 251.25 L 480 261" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round"/>
+                    
+                    <!-- Data Points -->
+                    <circle cx="90" cy="82.25" r="4" fill="#dc2626"/>
+                    <circle cx="220" cy="189.5" r="4" fill="#0284c7"/>
+                    <circle cx="415" cy="251.25" r="4" fill="#0284c7"/>
+                    <circle cx="480" cy="261" r="4" fill="#dc2626"/>
+
+                    <!-- Title & Axis Titles -->
+                    <text x="330" y="95" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#334155">CO₂</text>
+                    <text x="285" y="348" font-family="Cairo, sans-serif" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">درجة الحرارة (درجة مئوية)</text>
+                    <text x="25" y="165" font-family="Cairo, sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle" transform="rotate(-90 25 165)">الذوبانية (جم من ثاني أكسيد الكربون لكل 1 كجم من الماء)</text>
+                </svg>`
+            },
+            o2_solubility: {
+                title: "منحنى ذوبانية غاز الأكسجين (O2) مع درجة الحرارة",
+                svg: `
+                <svg viewBox="0 0 520 360" class="w-full max-w-lg mx-auto bg-white rounded-xl border border-slate-200 p-2 select-none">
+                    <!-- Grid Lines -->
+                    <g stroke="#e2e8f0" stroke-width="1">
+                        <line x1="90" y1="40" x2="480" y2="40"/>
+                        <line x1="90" y1="72.5" x2="480" y2="72.5"/>
+                        <line x1="90" y1="105" x2="480" y2="105"/>
+                        <line x1="90" y1="137.5" x2="480" y2="137.5"/>
+                        <line x1="90" y1="170" x2="480" y2="170"/>
+                        <line x1="90" y1="202.5" x2="480" y2="202.5"/>
+                        <line x1="90" y1="235" x2="480" y2="235"/>
+                        <line x1="90" y1="267.5" x2="480" y2="267.5"/>
+                    </g>
+                    <!-- Axes -->
+                    <line x1="90" y1="30" x2="90" y2="300" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="90" y1="300" x2="490" y2="300" stroke="#1e293b" stroke-width="2.5"/>
+                    
+                    <!-- Y-Axis Ticks & Labels (0 to 0.08) -->
+                    <g font-family="Arial, sans-serif" font-size="13" fill="#1e293b" text-anchor="end" font-weight="bold">
+                        <text x="82" y="45">0.08</text><line x1="85" y1="40" x2="90" y2="40" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="77">0.07</text><line x1="85" y1="72.5" x2="90" y2="72.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="110">0.06</text><line x1="85" y1="105" x2="90" y2="105" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="142">0.05</text><line x1="85" y1="137.5" x2="90" y2="137.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="175">0.04</text><line x1="85" y1="170" x2="90" y2="170" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="207">0.03</text><line x1="85" y1="202.5" x2="90" y2="202.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="240">0.02</text><line x1="85" y1="235" x2="90" y2="235" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="272">0.01</text><line x1="85" y1="267.5" x2="90" y2="267.5" stroke="#1e293b" stroke-width="2"/>
+                        <text x="82" y="305">0</text>
+                    </g>
+
+                    <!-- X-Axis Ticks & Labels (0 to 60) -->
+                    <g font-family="Arial, sans-serif" font-size="13" fill="#1e293b" text-anchor="middle" font-weight="bold">
+                        <text x="90" y="320">0</text>
+                        <text x="155" y="320">10</text><line x1="155" y1="300" x2="155" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="220" y="320">20</text><line x1="220" y1="300" x2="220" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="285" y="320">30</text><line x1="285" y1="300" x2="285" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="350" y="320">40</text><line x1="350" y1="300" x2="350" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="415" y="320">50</text><line x1="415" y1="300" x2="415" y2="306" stroke="#1e293b" stroke-width="2"/>
+                        <text x="480" y="320">60</text><line x1="480" y1="300" x2="480" y2="306" stroke="#1e293b" stroke-width="2"/>
+                    </g>
+
+                    <!-- Dashed Reference Lines (Exact from PDF) -->
+                    <!-- At ~22°C -> ~0.034 -->
+                    <line x1="90" y1="189.5" x2="233" y2="189.5" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <line x1="233" y1="189.5" x2="233" y2="300" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <!-- At 50°C -> ~0.018 -->
+                    <line x1="90" y1="241.5" x2="415" y2="241.5" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+                    <line x1="415" y1="241.5" x2="415" y2="300" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,5"/>
+
+                    <!-- Curve: (0, 0.072) -> y=66; (22, 0.034) -> y=189.5; (50, 0.018) -> y=241.5; (60, 0.016) -> y=248 -->
+                    <path d="M 90 66 Q 155 140, 233 189.5 T 415 241.5 L 480 248" fill="none" stroke="#881337" stroke-width="3.5" stroke-linecap="round"/>
+                    
+                    <!-- Data Points -->
+                    <circle cx="90" cy="66" r="4" fill="#881337"/>
+                    <circle cx="233" cy="189.5" r="4" fill="#0284c7"/>
+                    <circle cx="415" cy="241.5" r="4" fill="#0284c7"/>
+                    <circle cx="480" cy="248" r="4" fill="#881337"/>
+
+                    <!-- Title & Axis Titles -->
+                    <text x="330" y="95" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#881337">O₂</text>
+                    <text x="285" y="348" font-family="Cairo, sans-serif" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">درجة الحرارة (درجة مئوية)</text>
+                    <text x="25" y="165" font-family="Cairo, sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle" transform="rotate(-90 25 165)">الذوبانية (جم من الأكسجين لكل 1 كجم من الماء)</text>
+                </svg>`
+            }
+        };
+
+        // ==========================================
+        // 2. COMPLETE 56 MCQ QUESTIONS (VERBATIM)
+        // ==========================================
+        const mcqQuestions = [
+            // --- LESSON 1: التكيفات البيولوجية وتأثير الغازات ---
+            {
+                id: 1, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "تولد أسماك السلمون في بيئة المياه العذبة، ثم تهاجر إلى البحار لتقضي معظم حياتها، وعند النضج الجنسي تعود مجددًا إلى الأنهار للتكاثر. ما التصنيف العلمي الدقيق لهذا السلوك، وما الغرض البيولوجي منه؟",
+                options: [
+                    "تكيف سلوكي بهدف التكاثر وحفظ النوع من الانقراض، واستغلال الموارد المتاحة.",
+                    "تكيف تركيبي يهدف لزيادة مساحة السطح اللازمة لامتصاص الأكسجين.",
+                    "تكيف فسيولوجي لرفع تركيز اليوريا في الدم أثناء السباحة في الملوحة العالية.",
+                    "تكيف وظيفي للتخلص المباشر من الأملاح الزائدة عبر الخياشيم."
+                ],
+                ans: 0
+            },
+            {
+                id: 2, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "كيف تتكيف أسماك الأعماق فسيولوجياً لتجاوز عقبة الانخفاض الحاد والشديد في مستويات الأكسجين في أعماق المحيط؟",
+                options: [
+                    "رفع معدلات الأيض الخلوي لإنتاج طاقة حركية تزيد من سرعة السباحة.",
+                    "ابتلاع كميات هائلة من المياه لتنشيط التبادل الغازي المباشر عبر الجلد.",
+                    "خفض معدل الأيض الأساسي مع زيادة تركيز الهيموجلوبين في دمها.",
+                    "اختزان كميات كبيرة من اليوريا في مجرى الدم لرفع الضغط الشرياني."
+                ],
+                ans: 2
+            },
+            {
+                id: 3, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "تمتلك الأسماك العظمية تركيباً يُعرف بـ كيس العوم (المثانة الهوائية). ما الوظيفة الفسيولوجية الجوهرية لهذا التركيب داخل البيئة المائية؟",
+                options: [
+                    "ترشيح الأملاح الزائدة من الدم الشرياني وطردها إلى الوسط المحيط.",
+                    "تمكين السمكة من التحكم في الطفو، وضبط العمق الرأسي، والحفاظ على التوازن.",
+                    "تخزين الغازات الحيوية لاستخدامها في التنفس أثناء السكون في القاع.",
+                    "إفراز المادة المخاطية المزلقة لتقليل الاحتكاك وحماية الجسم من الطفيليات."
+                ],
+                ans: 1
+            },
+            {
+                id: 4, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "أي من المظاهر التالية يمثل تطبيقاً عملياً لمفهوم \"التكيف السلوكي\" لدى الأحياء المائية؟",
+                options: [
+                    "تحور جدران الشرايين والأوردة لتصبح أكثر مرونة ومتانة لمقاومة الضغط الهيدروستاتيكي.",
+                    "زيادة الكثافة النوعية للهيموجلوبين في خلايا الدم الحمراء لاستخلاص الأكسجين شحيح التركيز.",
+                    "امتلاك مثانة غازية متطورة تمتلئ بالهواء لتنظيم الكثافة النوعية أثناء الطفو.",
+                    "الهجرة الموسمية بين البيئات المائية أو إصدار أنماط صوتية للتواصل واستغلال الموارد."
+                ],
+                ans: 3
+            },
+            {
+                id: 5, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "إذا نقلت عينات من المحار (رخويات) والجمبري (قشريات) إلى حوض مائي مشبع بتركيزات مرتفعة من غاز ثاني أكسيد الكربون، فما التغيرات المتوقعة على الهيكل الخارجي لكل منهما؟",
+                options: [
+                    "يتآكل الهيكل الكيتيني للجمبري، بينما يزداد سمك صدفة المحار نتيجة ترسيب الكولاجين.",
+                    "يتحلل الهيكلان معاً بنفس المعدل، نظراً لتماثل صياغتهما الكيميائية من فوسفات الكالسيوم.",
+                    "لا يتأثر أي منهما لأن H2CO3 يعمل كطبقة واقية تمنع ذوبان الهياكل.",
+                    "تتآكل صدفة المحار المكونة من كربونات الكالسيوم، بينما يقل تأثر الهيكل الكيتيني للجمبري."
+                ],
+                ans: 3
+            },
+            {
+                id: 6, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "ما السبب العلمي الكامن وراء تميز المياه الباردة باحتوائها على وفرة من الغازات الحيوية المذابة مقارنة بالمياه الدافئة؟",
+                options: [
+                    "الانعدام التام لتركيزات الأملاح والملوحة في الكتل المائية الباردة.",
+                    "العلاقة العكسية بين درجة الحرارة وذوبانية الغازات؛ حيث تزداد الذوبانية بانخفاض الحرارة.",
+                    "التثبيط المطلق لعمليات البناء الضوئي في درجات الحرارة المنخفضة.",
+                    "قدرة المياه الباردة على تحويل مركب كربونات الكالسيوم إلى بروتين الكولاجين."
+                ],
+                ans: 1
+            },
+            {
+                id: 7, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "أي من الكائنات المائية التالية لا يطرأ على هيكله الخارجي تأثير هدمي مباشر عند تحول كربونات الكالسيوم غير الذائبة إلى بيكربونات كالسيوم قابلة للذوبان؟",
+                options: [
+                    "الشعاب المرجانية (من اللاسعات).",
+                    "قنفذ البحر (من شوكيات الجلد).",
+                    "المحار (من الرخويات).",
+                    "الجمبري (من القشريات)."
+                ],
+                ans: 3
+            },
+            {
+                id: 8, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي",
+                q: "استناداً إلى التحليل البيولوجي لتركيب سمكة الجليد وسمكة الأفعى، ما الاستراتيجية التشريحية المشتركة بينهما لمقاومة الضغط الهيدروستاتيكي المرتفع في الأعماق؟",
+                options: [
+                    "امتلاك أجسام مضغوطة جانبياً لتبديد وتوزيع تأثير الضغط المائي العالي.",
+                    "الاعتماد على فتحات تنفسية رأسية متطورة لاستنشاق الهواء الجوي المباشر.",
+                    "استخدام آلية الفجوات المنقبضة الخلوية لطرد المياه الزائدة أولاً بأول.",
+                    "الانتقال الدائم إلى مصبات الأنهار العذبة ذات الضغط المنخفض."
+                ],
+                ans: 0
+            },
+            {
+                id: 9, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ)",
+                q: "عند نقل خلية أميبا (كائن وحيد الخلية) من بيئة مياه عذبة نقية إلى بيئة مائية ذات ضغط أسموزي مرتفع جداً يتجاوز ضغطها الخلوي الداخلي، ما التغير الفسيولوجي المتوقع لنشاط الفجوة المنقبضة؟",
+                options: [
+                    "يزداد معدل اندفاع الفجوة نحو الغشاء الخلوي لتفريغ المحتوى وتجنب الانفجار.",
+                    "تتسع الفجوة المنقبضة تدريجياً نتيجة تدفق الماء المفرط حتى تمزق السيتوبلازم.",
+                    "تتحول الفجوة الوظيفية مباشرة إلى تراكيب خيشومية خلوية متخصصة لإفراز الأملاح.",
+                    "يتثبط نشاط الفجوة المنقبضة أو ينعدم؛ لتوقف التدفق الأسموزي للماء نحو الداخل."
+                ],
+                ans: 3
+            },
+            {
+                id: 10, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ)",
+                q: "عينة من مياه بحيرة عذبة تحتوي على حجم محدد من الغازات الحيوية المذابة عند درجة حرارة 20°C، إذا نقلت عينة مماثلة تماماً في الحجم والظروف إلى مياه المحيط المالح، فما النسبة التقريبية المتوقعة لانخفاض ذوبانية غازي O2 و CO2؟",
+                options: [
+                    "تنخفض ذوبانيتهما بشكل هائل بمقدار 500%.",
+                    "تنخفض معدلات الذوبانية بنسبة مطلقة تصل إلى 50%.",
+                    "تنخفض الذوبانية بنسبة تتراوح تقريباً بين 20% إلى 30% بفعل تأثير الأملاح المذابة.",
+                    "ترتفع نسبة الذوبانية بمقدار 20% نتيجة لظهور قوى التجاذب الأيوني."
+                ],
+                ans: 2
+            },
+            {
+                id: 11, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ)",
+                q: "كيف تؤثر التداعيات الكيميائية الناتجة عن زيادة تركيز غاز ثاني أكسيد الكربون في الوسط المائي على كل من المحار وأسماك البلطي؟",
+                options: [
+                    "تعوق التكلس وتذيب أصداف المحار، وتسبب خللاً فسيولوجياً في توازن الكالسيوم يضعف نمو البلطي.",
+                    "تزيد من كفاءة الترسيب الكلسي في صدفة المحار وتضاعف من الكتلة الحيوية للبلطي.",
+                    "تحول التركيب الهيكلي للمحار إلى كيتين، بينما تحور عظام البلطي إلى غضاريف كولاجينية.",
+                    "يغيب التأثير تماماً عن كلا الكائنين لعدم وجود أي تفاعل كيميائي بين الأملاح والغازات."
+                ],
+                ans: 0
+            },
+            {
+                id: 12, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب)",
+                q: "تختلف الدلافين عن الأسماك العظمية في العضو والميكانيكية التشريحية المستخدمة في عملية التبادل الغازي (التنفس)، على الرغم من معيشتهما المشتركة في نفس البيئة المائية. أي الخيارات التالية يصف بدقة هذا التكيف لدى الدلافين؟",
+                options: [
+                    "امتلاك خياشيم متطورة مغطاة بصفائح مخاطية عازلة لتصفية الغازات الذائبة.",
+                    "امتلاك فتحات تنفسية في قمة الرأس بديلاً عن الأنف، تتيح تنفس الهواء الجوي مباشرة.",
+                    "الاعتماد على فجوات منقبضة رئوية ضخمة لطرد المياه الزائدة عبر آليات أسموزية عكسية.",
+                    "امتلاك أكياس هوائية متطورة للغاية متصلة بالجلد الخارجي لامتصاص الغازات."
+                ],
+                ans: 1
+            },
+            {
+                id: 13, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب)",
+                q: "كيف يؤثر ارتفاع مستويات غاز ثاني أكسيد الكربون المذاب في الماء سلباً على الفسيولوجيا الداخلية لأسماك المياه العذبة والمالحة كالبلطي والراي؟",
+                options: [
+                    "تحفيز الترسيب الكثيف لبروتين الكولاجين داخل الأنسجة الزعنفية.",
+                    "إحداث خلل فسيولوجي مباشر في اتزان وأيض الكالسيوم داخل الجسم، مما يثبط معدلات النمو الطبيعية.",
+                    "تسريع عمليات أكسدة الجلوكوز لإنتاج طاقة حيوية تزيد عن النطاق الطبيعي.",
+                    "تحويل البنية الهيكلية الداخلية بالكامل إلى مادة كيتينية مرنة لزيادة المقاومة."
+                ],
+                ans: 1
+            },
+            {
+                id: 14, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب)",
+                q: "من الشكل المقابل: ماذا يحدث لكمية غاز CO2 المذابة عند رفع درجة حرارة الكتلة المائية من 0°C إلى 60°C؟",
+                diagram: "co2_solubility",
+                options: [
+                    "ترتفع معدلات الذوبانية طردياً من 0.07 لتصل إلى 50.",
+                    "تظل قيم الذوبانية ثابتة تماماً عند الخط المرجعي المقدر بـ 1.5.",
+                    "تنخفض قيم الذوبانية عكسياً من نحو 3.35 عند 0°C إلى 0.6 عند 60°C.",
+                    "تتلاشى تماماً وتنعدم الذوبانية لتصل إلى الصفر المطلق عند بلوغ درجة حرارة 10°C."
+                ],
+                ans: 2
+            },
+            {
+                id: 15, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج)",
+                q: "لا يقتصر الدور الفسيولوجي للخياشيم في الأسماك البحرية العظمية على إتمام التبادل الغازي التنفسي؛ بل تمتد لوظائف أخرى. ما الدور الفسيولوجي الأسموزي الإضافي الذي تؤديه الخياشيم في هذه البيئة؟",
+                options: [
+                    "امتصاص جزيئات الماء العذب بنشاط عبر الغشاء الخلوي ضد منحدر التركيز.",
+                    "تخليق وبناء مركبات اليوريا النيتروجينية وضخها في مجرى الدم.",
+                    "تجميع الفائض من المياه العذبة الداخلية وتفريغه عبر مسام خاصة.",
+                    "إخراج وتصريف أيونات الأملاح الزائدة المتراكمة في الجسم عبر خلايا إفرازية متخصصة."
+                ],
+                ans: 3
+            },
+            {
+                id: 16, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج)",
+                q: "في تجربة معملية، تم تقليل تركيز غاز ثاني أكسيد الكربون CO2 المذاب في حوض يحتوي على طحالب وعوالق نباتية. ما النتيجة المباشرة المترتبة على ذلك على المستويات المستهلكة العليا في السلسلة الغذائية البحرية؟",
+                options: [
+                    "تحول بيكربونات الكالسيوم إلى كربونات كالسيوم فتزداد سمك أصداف الرخويات.",
+                    "انخفاض معدل تكوين السكريات (كالجلوكوز) ونقص الطاقة الكيميائية المتاحة للمستهلكات.",
+                    "زيادة معدل انقسام اليرقات والبيض نتيجة ارتفاع الرقم الهيدروجيني (pH).",
+                    "تحفيز فوري لعمليات أكسدة الجلوكوز عبر مسارات الهدم التنفسي للأسماك."
+                ],
+                ans: 1
+            },
+            {
+                id: 17, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج)",
+                q: "من الشكل المقابل: ماذا يحدث لذوبانية O2 عند انخفاض درجة حرارة الكتلة المائية من 60°C إلى 0°C؟",
+                diagram: "o2_solubility",
+                options: [
+                    "تزداد الذوبانية طردياً (عكسياً مع الحرارة) من 0.016 (نحو 0.02) إلى 0.07 جم لكل كيلوجرام ماء.",
+                    "تظل ثابتة عند 0.03.",
+                    "تنخفض من نحو 0.07 عند 0°C إلى 0.02 عند 60°C (هذا يصف التسخين وليس التبريد).",
+                    "تنخفض الذوبانية حتى تصل إلى الصفر تماماً عند 40°C."
+                ],
+                ans: 0
+            },
+
+            // --- LESSON 2: تأثير الضوء والإشعاع الشمسي والضغط المائي ---
+            {
+                id: 18, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "كلما زاد عمق الماء، فإن شدة الضوء تحت سطح الماء:",
+                options: [
+                    "تزداد تدريجياً.",
+                    "تقل تدريجياً.",
+                    "تقل ثم تزداد.",
+                    "تزداد ثم تقل."
+                ],
+                ans: 1
+            },
+            {
+                id: 19, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "أي من العبارات التالية يمثل الترتيب الصحيح للمناطق الضوئية في مياه المحيطات حسب عمقها من أعلى إلى أسفل؟",
+                options: [
+                    "المنطقة الشفقية - المنطقة المظلمة - المنطقة المضاءة.",
+                    "المنطقة المظلمة - المنطقة المضاءة - المنطقة الشفقية.",
+                    "المنطقة المضاءة - المنطقة الشفقية - المنطقة المظلمة.",
+                    "المنطقة الشفقية - المنطقة المضاءة - المنطقة المظلمة."
+                ],
+                ans: 2
+            },
+            {
+                id: 20, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "تتميز السوائل بمقاومة الانضغاط وبالتالي تحتفظ بحجمها ثابتاً تقريباً، بينما تتميز المواد الغازية بـ:",
+                options: [
+                    "عدم قابليتها للانسكاب أو الجريان كالموائع.",
+                    "قابليتها للانضغاط بسهولة وشغل أي حيز توجد فيه.",
+                    "الحفاظ على شكل ثابت وحجم محدد تحت أي ضغط.",
+                    "زيادة مقاومتها للضغط الخارجي كلما قل حجم الحيز."
+                ],
+                ans: 1
+            },
+            {
+                id: 21, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "أثناء نفاذ ألوان الطيف المختلفة في مياه المحيط، أي من الألوان الضوئية تمتص طاقتها أولاً بالقرب من السطح (عند عمق 10 سم تقريباً)؟",
+                options: [
+                    "البرتقالي والأزرق.",
+                    "الأحمر والأزرق.",
+                    "البرتقالي والأحمر (لأنها ذات أطوال موجية طويلة تمتص سريعاً في الطبقات السطحية).",
+                    "الأحمر والأصفر."
+                ],
+                ans: 2
+            },
+            {
+                id: 22, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "إذا علمت أن ضغط الماء يزداد بمعدل 1 atm لكل 10 أمتار أسفل السطح، فكم يبلغ الضغط الكلي المؤثر على كائن عند عمق 30 متراً؟ (علماً بأن الضغط الجوي عند السطح Pa = 1 atm)",
+                options: [
+                    "3 ضغط جوي (atm)",
+                    "4 ضغط جوي (atm)",
+                    "31 ضغط جوي (atm)",
+                    "11 ضغط جوي (atm)"
+                ],
+                ans: 1
+            },
+            {
+                id: 23, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "يكون ضغط الماء عند عمق معين في ماء البحر أكبر من ضغطه عند نفس العمق في ماء بحيرة عذبة، ويرجع ذلك مباشرة إلى:",
+                options: [
+                    "زيادة مساحة السطح المعرضة للضغط في مياه البحار.",
+                    "نقص وزن عمود السائل المؤثر في مياه البحار والمحيطات.",
+                    "زيادة درجة حرارة مياه البحيرات العذبة مقارنة بالبحار.",
+                    "زيادة كثافة مياه البحر (ρ) نتيجة نسبة الأملاح والعوالق بها."
+                ],
+                ans: 3
+            },
+            {
+                id: 24, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "طورت أسماك أعماق البحار السحيقة تكيفات فريدة في أغشية خلاياها لتتحمل الضغط الهائل وتمنع تلف الخلايا وسحقها، ويتحقق ذلك من خلال:",
+                options: [
+                    "زيادة مستويات الأحماض الدهنية غير المشبعة للحفاظ على سيولة الأغشية واستقرارها.",
+                    "تغطية الأغشية الخلوية بطبقة سميكة كلسية صلبة تقاوم حركة تيارات الماء.",
+                    "تقليل السوائل الداخلية والاعتماد الكلي على الغازات المضغوطة لتوليد ضغط معاكس.",
+                    "تحويل الهيكل العظمي بالكامل إلى عظام صلبة غير مرنة تمنع نفاذية الخلية."
+                ],
+                ans: 0
+            },
+            {
+                id: 25, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي",
+                q: "في المناطق القطبية، يؤدي انخفاض أو غياب الإشعاع الشمسي تماماً خلال فترات الشتاء إلى حدوث اضطراب في التوازن البيئي المائي نتيجة لـ:",
+                options: [
+                    "تحول الكائنات ذاتية التغذية إلى كائنات مفترسة تتغذى على سمك التونة.",
+                    "زيادة نمو الطحالب والنباتات المائية بشكل مفرط يمنع حركة الأسماك.",
+                    "انخفاض معدلات التمثيل الضوئي بشكل كبير مما يؤثر على وفرة الغذاء للكائنات البحرية.",
+                    "توقف حركة تيار الخليج (Gulf Stream) وتجمد كافة طبقات المحيط حتى القاع."
+                ],
+                ans: 2
+            },
+            {
+                id: 26, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ)",
+                q: "تنمو النباتات المائية والطحالب بشكل جيد في المياه الصافية حتى عمق 100 متر، بينما يقل هذا العمق كثيراً في المياه العالقة أو العكرة. ما التفسير العلمي الأنسب لهذه الظاهرة؟",
+                options: [
+                    "المواد العالقة والرواسب في المياه العكرة تمتص وتشتت الأشعة الشمسية، مما يمنع وصول الضوء اللازم للتمثيل الضوئي للأعماق.",
+                    "المياه العكرة تزيد من ملوحة وكثافة الطبقات السطحية، مما يؤدي إلى زيادة مباشرة في الضغط المائي وسحق خلايا الطحالب.",
+                    "الرواسب تمنع نفاذ الأشعة تحت الحمراء فقط دون الطيف المرئي، مما يؤثر على حرارة المياه ولا يؤثر على التمثيل الضوئي.",
+                    "انخفاض شدة الضوء في المياه العكرة يسرع من عملية الطفو الخلوي، مما يدفع الطحالب للانتقال إلى الأعماق السحيقة فتموت."
+                ],
+                ans: 0
+            },
+            {
+                id: 27, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ)",
+                q: "إذا غاص غواص في مياه بحيرة عذبة نقية للبحث عن عينات حيوية، حتى وصل إلى عمق معين أصبح عنده الضغط المؤثر الناتج عن عمود الماء فقط يعادل 4 ضغط جوي (4 atm). احسب الضغط الكلي المؤثر على الغواص عند هذا العمق؟",
+                options: [
+                    "3 ضغط جوي (atm)",
+                    "4 ضغط جوي (atm)",
+                    "5 ضغط جوي (atm)",
+                    "14 ضغط جوي (atm)"
+                ],
+                ans: 2
+            },
+            {
+                id: 28, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ)",
+                q: "تمتلك أسماك الأعماق السحيقة التي تعيش على أعماق تتجاوز 2000 متر تحت سطح البحر تكيفات خلوية متطورة للغاية لضمان عدم تلف الخلايا أو انهيار أحشائها. أي مما يلي يمثل هذا التكيف الكيميائي الحيوي؟",
+                options: [
+                    "تستبدل الأغشية الخلوية تماماً بهيكل غضروفي مرن وخفيف الوزن يمنع نفاذ الغازات والزيوت تماماً للداخل.",
+                    "تحتوي أغشية خلاياها على مستويات مرتفعة من الأحماض الدهنية غير المشبعة لتمنح الأغشية سيولة واستقراراً تحت الضغط الهائل.",
+                    "زيادة مستويات الأحماض الدهنية المشبعة في تركيب الأغشية لزيادة صلابة وجفاف جدار الخلية لمنع السوائل من الحركة.",
+                    "الاعتماد على مثانات سباحة هوائية ضخمة مملوءة بغاز الهيدروجين عالي الضغط لمعادلة الضغط الهيدروستاتيكي الخارجي."
+                ],
+                ans: 1
+            },
+            {
+                id: 29, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب)",
+                q: "يسلك الضوء المرئي عند اختراقه لعمود الماء سلوكاً تدرجياً دقيقاً يؤدي إلى تشتت بعض الألوان وامتصاص الأخرى. أي العبارات التالية تصف هذا السلوك بدقة تامة طبقاً للأطوال الموجية؟",
+                options: [
+                    "يمتص الماء الألوان الدافئة ذات الأطوال الموجية الطويلة مثل الأحمر والبرتقالي في الطبقات الأولى، بينما يشتت الألوان الأكثر برودة ذات الأطوال الموجية القصيرة كاللون الأزرق الذي ينفذ أعمق.",
+                    "يمتص الماء اللون الأزرق والبنفسجي بالكامل في أول 10 سنتيمترات من السطح، بينما ينفذ اللون الأحمر ذو الطاقة العالية إلى عمق يتجاوز 200 متر.",
+                    "تتساوى قدرة جميع ألوان الطيف السبعة على الاختراق والنفاذ، ويمتصها الماء بالكامل دفعة واحدة عند الوصول لعمق ثابت يساوي 10 أمتار بالضبط.",
+                    "تتشتت الموجات الطويلة الدافئة بالكامل في المياه المفتوحة، مما يمنع النباتات السطحية من القيام بالبناء الضوئي نهائياً."
+                ],
+                ans: 0
+            },
+            {
+                id: 30, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب)",
+                q: "تتحرك سمكة عظمية في مياه مالحة بكثافة عالية، فإذا علمت أن ضغط الماء يزداد بمعدل 1 ضغط جوي (1 atm) لكل 10 أمتار هبوطاً تحت السطح، فما هو العمق الحقيقي الذي تتواجد عنده السمكة عندما يكون الضغط الكلي الواقع عليها يعادل 11 مرة قدر الضغط الجوي؟",
+                options: [
+                    "10 أمتار",
+                    "90 متراً",
+                    "100 متراً",
+                    "110 متر"
+                ],
+                ans: 2
+            },
+            {
+                id: 31, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب)",
+                q: "يدرس باحث بيئي التوازن الحركي لأسماك السلمون أثناء هجرتها وتغيير أعماقها بين البحار والأنهار. ما هي الآلية البيولوجية التي وهبها الله لهذه الكائنات في بنيتها لتنظيم الطفو والاتزان الميكانيكي تحت ظروف الضغط المتغيرة؟",
+                options: [
+                    "استخدام خلايا الكبد الزيتية الضخمة لامتصاص الغازات الجوية مباشرة من سطح الماء وضخها في خلايا الدم الخارجي.",
+                    "الاعتماد على زيادة مرونة غشائها الخلوي عن طريق تقليص نسب الأحماض الدهنية غير المشبعة لتقاوم التيارات العذبة.",
+                    "التخلص التام من الهيكل العظمي الداخلي واستبداله بسوائل هيدروليكية ذات كثافة منخفضة جداً تعادل مياه النهر.",
+                    "امتلاك مثانات سباحة (كيس عوم) مملوءة بالغاز تساعدها على التحكم في طفوها والتوازن أو الانتقال بين الأعماق المختلفة."
+                ],
+                ans: 3
+            },
+            {
+                id: 32, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج)",
+                q: "تتوزع الكائنات البحرية عمودياً وأفقياً بشكل غير متكافئ في البيئات المحيطية. ما المعيار المباشر لهذا التوزيع غير المتكافئ؟",
+                options: [
+                    "التغيرات في سرعة موجات الراديو البحرية.",
+                    "مستوى العمق الجيولوجي للصخور القاعية فقط.",
+                    "حركة الملاحة والسفن البحرية.",
+                    "احتياجات الكائنات المتفاوتة من الضوء والطاقة."
+                ],
+                ans: 3
+            },
+            {
+                id: 33, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج)",
+                q: "تسقط أشعة الشمس على مياه المحيط بزوايا مختلفة نتيجة حركة الأرض وتغير الفصول. في أي الحالات التالية تكون كمية الطاقة الضوئية التي تخترق سطح الماء أكبر ما يمكن، ومتى تنعكس كمية أكبر للغلاف الجوي؟",
+                options: [
+                    "تكون كمية الضوء المخترقة أكبر ما يمكن عندما تسقط الأشعة مائلة بزاوية حادة جداً، وتنعكس بالكامل عندما تسقط عمودية.",
+                    "تكون كمية الضوء المخترقة كبيرة جداً عندما تسقط أشعة الشمس عمودية على السطح، بينما تقل الكمية المخترقة وتزداد المنعكسة عندما تسقط مائلة.",
+                    "لا تؤثر زاوية سقوط أشعة الشمس نهائياً على النفاذ، وتخترق نفس كمية الطاقة الضوئية السطح طوال ساعات النهار والليل.",
+                    "تخترق الأشعة المائلة مياه المحيط لتصل إلى المنطقة المظلمة السحيقة فوراً، بينما تحبس الأشعة العمودية في أول 10 سم."
+                ],
+                ans: 1
+            },
+            {
+                id: 34, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج)",
+                q: "يقاوم السائل (كالماء) الانضغاط بشكل شبه تام مما يجعله يحتفظ بحجمه ثابتاً، بينما تنضغط الغازات بسهولة. كيف تستغل خلايا كائنات الأعماق السحيقة هذه الخاصية الفيزيائية للسوائل للبقاء تحت الضغط العالي الساحق؟",
+                options: [
+                    "تمتلك هياكل جسدية مدمجة ومكونات بروتينية وسوائل داخلية تتحمل الضغط، وبعضها لا يمتلك مثانات غازية منعاً لانهيارها وتحتوي مثاناتها على سوائل بدلاً من الغازات.",
+                    "تقوم خلاياها بامتصاص كميات هائلة من الغازات القابلة للانضغاط لتملأ بها كيس العوم حتى لا ينفجر الجدار الخارجي للسمكة.",
+                    "تستبدل السوائل الداخلية بخلايا هوائية جافة تماماً وقابلة للانضغاط لتقليل حجم السمكة بنسبة 90% عند الهبوط للقاع.",
+                    "تعتمد على الهيكل العظمي المصنوع من الكالسيوم النقي لامتصاص ضغط السوائل وتحويله إلى طاقة حرارية دافئة للخلية."
+                ],
+                ans: 0
+            },
+
+            // --- LESSON 3: التوازن البيئي ودور الإنسان ---
+            {
+                id: 35, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "أي مما يلي يعبر عن التعريف الصحيح لـ التوازن البيئي في النظم المائية وفقاً لما درست؟",
+                options: [
+                    "حالة من الاستقرار الساكن تحدث عند غياب الكائنات المفترسة تماماً من النظام البيئي.",
+                    "حالة من الاستقرار الديناميكي تحدث عندما تتفاعل الكائنات الحية مع المكونات غير الحية بطريقة تحفظ استمرارية الحياة.",
+                    "الزيادة المفرطة في مستويات النيتروجين والفوسفور لزيادة إنتاجية الطحالب البحرية.",
+                    "عملية تدفق الطاقة من الأسماك المفترسة مباشرة إلى النباتات والطحالب النامية."
+                ],
+                ans: 1
+            },
+            {
+                id: 36, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "ما هي الكائنات التي تمثل الأساس الأول للشبكة الغذائية وتبدأ منها عملية تدفق الطاقة في النظام البيئي المائي؟",
+                options: [
+                    "الأسماك آكلات العشب التي تتغذى على الفضلات.",
+                    "العوالق الحيوانية (zooplankton) التي تستهلكها الأسماك الصغيرة.",
+                    "الكائنات المنتجة مثل الطحالب والنباتات التي تقوم بعملية التمثيل الضوئي.",
+                    "الأسماك المفترسة الكبيرة التي تحافظ على توازن أعداد الفرائس."
+                ],
+                ans: 2
+            },
+            {
+                id: 37, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "يؤدي الاختلال في توازن مستويات عنصري النيتروجين والفوسفور وزيادتهما بشكل مفرط في البحيرات إلى حدوث:",
+                options: [
+                    "انخفاض حاد في أعداد الأسماك الصغيرة النامية مباشرة.",
+                    "ازدهار غير طبيعي للطحالب يؤثر سلباً على التوازن البيئي.",
+                    "زيادة كفاءة التمثيل الضوئي للشعاب المرجانية العميقة.",
+                    "تحول الكائنات المستهلكة إلى كائنات منتجة للطاقة."
+                ],
+                ans: 1
+            },
+            {
+                id: 38, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "إذا قامت إحدى الشركات بتصريف مياه ملوثة تحتوي على مبيدات حشرية ومعادن ثقيلة في مجرى مائي، فما التأثير المباشر المتوقع على هذا النظام وفقاً لما درست؟",
+                options: [
+                    "تحسن جودة المياه نتيجة تفاعل المعادن مع الأكسجين المذاب.",
+                    "تأثير سلبي على جودة المياه وإلحاق الضرر المباشر بصحة الكائنات الحية.",
+                    "زيادة معدلات هجرة أسماك السلمون لإنتاج البويضات في الأنهار.",
+                    "اختفاء قنافذ البحر تماماً وحماية الشعاب المرجانية من التدمير."
+                ],
+                ans: 1
+            },
+            {
+                id: 39, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "في بيئة بحرية، إذا تعرضت الأسماك المفترسة الكبيرة لصيد مفرط أدى إلى تناقص أعدادها بشدة، فما السيناريو المتوقع تتابع حدوثه؟",
+                options: [
+                    "تناقص أعداد الأسماك الصغيرة لعدم وجود حماية لها.",
+                    "ازدياد أعداد الأسماك الصغيرة بشكل مفرط مما يؤدي إلى استهلاك الموارد الغذائية بشكل غير متوازن وحدوث اضطراب.",
+                    "تحول الأسماك الصغيرة إلى التغذية الذاتية عبر التمثيل الضوئي.",
+                    "انتقال الطاقة بشكل عكسي من المستهلكات إلى المنتجات المائية."
+                ],
+                ans: 1
+            },
+            {
+                id: 40, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "قام أحد المصانع بتطبيق مفهوم التنمية المستدامة عبر إدخال تكنولوجيا نظيفة تعيد تدوير المياه وتمنع النفايات الصناعية. ما الهدف الرئيسي من هذا الإجراء كما نص الكتاب؟",
+                options: [
+                    "تلبية احتياجات الجيل الحالي دون المساس بقدرة الأجيال المستقبلية على تلبية احتياجاتها.",
+                    "زيادة أعداد الكائنات المهددة بالانقراض في نهر النيل بشكل سريع.",
+                    "تقليل استهلاك العوالق الحيوانية (zooplankton) للطحالب البحرية.",
+                    "تغيير منسوب مياه الأنهار والتحكم التام في الفيضانات الموسمية."
+                ],
+                ans: 0
+            },
+            {
+                id: 41, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "ادرس المخطط التالي الذي يمثل تتابعاً غذائياً في نظام بيئي بحري: [أسماك مفترسة ← أسماك صغيرة ← عوالق حيوانية ← طحالب]. إذا استهلكت الأسماك المفترسة كميات كبيرة جداً من الأسماك الصغيرة، فما الأثر البيئي المتسلسل المترتب على ذلك؟",
+                options: [
+                    "تناقص أعداد العوالق الحيوانية وازدهار الطحالب بشكل غير محدود.",
+                    "زيادة أعداد العوالق الحيوانية مما يؤثر على نمو الطحالب وبالتالي يؤدي إلى عدم الحفاظ على التوازن.",
+                    "استقرار تام للنظام البيئي وزيادة التنوع البيولوجي للشعاب المرجانية.",
+                    "انخفاض حاد في مستويات النيتروجين والفوسفور في الطبقات السطحية."
+                ],
+                ans: 1
+            },
+            {
+                id: 42, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي",
+                q: "في بيئة الشعاب المرجانية، تلعب الأسماك المفترسة دوراً حيوياً غير مباشر في حماية الهيكل الفيزيائي للشعاب. يتم ذلك عن طريق:",
+                options: [
+                    "إفراز مواد كيميائية معادلة لسموم المبيدات الحشرية.",
+                    "السيطرة على أعداد الكائنات الصغيرة مثل قنافذ البحر التي يمكن أن تدمر الشعاب إذا زادت أعدادها بشكل غير طبيعي.",
+                    "زيادة نفاذية الضوء اللازم لنمو النباتات البحرية.",
+                    "طرد العوالق الحيوانية لمنع التنافس على المأوى المرجاني."
+                ],
+                ans: 1
+            },
+            {
+                id: 43, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ)",
+                q: "تنظم أعداد الكائنات الحية في كل مستوى من مستويات السلسلة الغذائية بالاعتماد على ميكانيكية محددة. ما هي هذه الميكانيكية المباشرة وفقاً لما درست؟",
+                options: [
+                    "التدفق الطبيعي للطاقة بدءاً من الكائنات المنتجة إلى المستهلكة.",
+                    "ثبات أعداد العوالق الحيوانية بشكل استاتيكي مطلق طوال العام.",
+                    "زيادة مستويات المعادن الثقيلة في مياه الأنهار والبحيرات.",
+                    "الاعتماد الكلي للمستهلكات العليا على المكونات غير الحية فقط."
+                ],
+                ans: 0
+            },
+            {
+                id: 44, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ)",
+                q: "يتفاعل كل نوع من الكائنات الحية مع غيره بطرق متعددة. إذا تراجعت أعداد الأسماك المفترسة في بيئة بحرية نتيجة الصيد المفرط، فما النتيجة البيولوجية المترتبة على ذلك مباشرة؟",
+                options: [
+                    "يزداد عدد الأسماك الصغيرة بشكل مفرط مما يؤدي إلى استهلاك الموارد الغذائية بشكل غير متوازن واضطراب النظام.",
+                    "تتحول الأسماك الصغيرة تلقائياً إلى كائنات منتجة تقوم بالتمثيل الضوئي.",
+                    "ينخفض معدل نمو الطحالب نتيجة الزيادة المفاجئة في المغذيات الكيميائية.",
+                    "يحدث استقرار ديناميكي فوري يحفظ التنوع البيولوجي دون حاجة للطاقة."
+                ],
+                ans: 0
+            },
+            {
+                id: 45, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ)",
+                q: "تساعد الأسماك المفترسة في الحفاظ على توازن الشعاب المرجانية عن طريق السيطرة على أعداد كائنات صغيرة معينة. ما هي هذه الكائنات التي قد تدمر الشعاب إذا زادت أعدادها بشكل غير طبيعي؟",
+                options: [
+                    "العوالق الحيوانية (zooplankton).",
+                    "قنافذ البحر.",
+                    "الطحالب الخضراء.",
+                    "الأسماك آكلات العشب."
+                ],
+                ans: 1
+            },
+            {
+                id: 46, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب)",
+                q: "تبدأ الطاقة بالتدفق في النظام البيئي المائي من كائنات محددة تقوم بعملية التمثيل الضوئي. ما هو الاسم العلمي لهذه المجموعات من الكائنات؟",
+                options: [
+                    "الكائنات المنتجة (مثل الطحالب والنباتات).",
+                    "الكائنات المستهلكة آكلات العشب.",
+                    "العوالق الحيوانية (zooplankton).",
+                    "الأسماك المفترسة العليا."
+                ],
+                ans: 0
+            },
+            {
+                id: 47, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب)",
+                q: "تصب بعض المنشآت مواد كيميائية مثل المبيدات الحشرية والمعادن الثقيلة في المياه. ما هو الأثر المباشر لهذه المواد الكيميائية على النظم المائية؟",
+                options: [
+                    "تحسين مستويات توازن العناصر الغذائية كالفوسفور.",
+                    "التأثير السلبي على جودة المياه وإلحاق الضرر بصحة الكائنات الحية.",
+                    "زيادة معدل تدفق الطاقة عبر الشبكة الغذائية بشكل طبيعي.",
+                    "تنشيط نمو الشعاب المرجانية لتوفير موطن جديد للأسماك."
+                ],
+                ans: 1
+            },
+            {
+                id: 48, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب)",
+                q: "في بيئة بحرية متوازنة، إذا زادت أعداد قنافذ البحر بشكل غير طبيعي نتيجة غياب ضابطها البيولوجي، فما الضرر الفيزيائي المباشر المتوقع حدوثه؟",
+                options: [
+                    "تدمير بنية الشعاب المرجانية مسبباً فقدان التنوع.",
+                    "زيادة نفاذية الضوء والتمثيل الضوئي للطبقات العميقة.",
+                    "انخفاض مستويات التلوث الصناعي كلياً واستقرار الموارد.",
+                    "تحول قنافذ البحر إلى كائنات منتجة أولية تدعم الطاقة."
+                ],
+                ans: 0
+            },
+            {
+                id: 49, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج)",
+                q: "يُعرف التوازن البيئي في النظم المائية بأنه حالة من الاستقرار تحدث عند تفاعل الكائنات الحية مع المكونات غير الحية. ما نوع هذا الاستقرار كما درست؟",
+                options: [
+                    "استقرار مؤقت يزول بزوال الأنشطة البشرية.",
+                    "استقرار ساكن (استاتيكي) يمنع أي تغير عددي.",
+                    "استقرار ديناميكي يضمن استمرارية الحياة.",
+                    "استقرار كيميائي يقتصر على الصخور القاعية فقط."
+                ],
+                ans: 2
+            },
+            {
+                id: 50, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج)",
+                q: "يؤدي الصيد الجائر وتدمير المواطن الطبيعية كالمستنقعات والشعاب المرجانية إلى عواقب بيئية وخيمة. ما هي النتيجة المباشرة المذكورة في الكتاب المدرسي؟",
+                options: [
+                    "فقدان التنوع البيولوجي واختلال التوازن البيئي.",
+                    "زيادة مستويات التوعية والتثقيف البيئي.",
+                    "تحسن تدفق الطاقة عبر الشبكات الغذائية.",
+                    "ثبات منسوب مياه نهر النيل وحمايته من الجفاف."
+                ],
+                ans: 0
+            },
+            {
+                id: 51, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج)",
+                q: "ما التقنية الحديثة المقترحة علمياً لتقليل استهلاك المياه في القطاع الزراعي وضمان استدامة الموارد؟",
+                options: [
+                    "الاعتماد الكامل على الصرف الصناعي غير المعالج.",
+                    "زيادة استخدام المبيدات الحشرية والمعادن الثقيلة.",
+                    "إقامة السدود ومشاريع تحويل مياه الأنهار كلياً.",
+                    "التقنيات الزراعية الحديثة لتقليل الاستهلاك."
+                ],
+                ans: 3
+            },
+
+            // --- LESSON 4: مكونات وطبقات الغلاف الجوي (الوحدة الثانية) ---
+            {
+                id: 52, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي",
+                q: "تسمى المنطقة الانتقالية الفاصلة التي تنتهي عندها طبقة الستراتوسفير عند ارتفاع 50 كم بـ ...............",
+                options: [
+                    "الميزوبوز",
+                    "الأيونوسفير",
+                    "التروبوبوز",
+                    "الستراتوبوز"
+                ],
+                ans: 3
+            },
+            {
+                id: 53, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي",
+                q: "يمثل غاز ثاني أكسيد الكربون (CO2) نسبة 0.04% تقريباً من حجم الغلاف الجوي. ما النتيجة الفسيولوجية والفيزيائية المباشرة لزيادة هذه النسبة بشكل ملحوظ؟",
+                options: [
+                    "زيادة نفاذ الأشعة فوق البنفسجية وانخفاض حرارة كوكب الأرض.",
+                    "حبس الحرارة وتأخير تسربها إلى الفضاء، مما يعزز ظاهرة الاحتباس الحراري.",
+                    "تأين ذرات النيتروجين في طبقة التروبوسفير وتكوين الشفق القطبي.",
+                    "زيادة معدل سرعة الإفلات لجميع غازات الغلاف الجوي."
+                ],
+                ans: 1
+            },
+            {
+                id: 54, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي",
+                q: "ما الخطر البيولوجي المباشر الناجم عن وصول الأشعة فوق البنفسجية الضارة (UV) إلى سطح الأرض في حال تلف الأوزون؟",
+                options: [
+                    "تصلب الأغشية الخلوية بسبب الأحماض الدهنية غير المشبعة.",
+                    "انخفاض سرعة الإفلات لكوكب الأرض.",
+                    "إحداث أضرار جسيمة للحمض النووي (DNA) في خلايا الكائنات الحية.",
+                    "توقف حركة موجات الراديو والاتصالات اللاسلكية."
+                ],
+                ans: 2
+            },
+            {
+                id: 55, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي",
+                q: "متى يتمكن كوكب معين من الاحتفاظ بغاز محدد على سطحه وضمن غلافه الجوي؟",
+                options: [
+                    "عندما تكون سرعة الإفلات صفراً.",
+                    "عندما تكون السرعة الفاعلة لجزيئات الغاز أكبر من أو تساوي سرعة الإفلات (Vrms ≥ Ve).",
+                    "عندما تنعدم درجة الحرارة كلياً.",
+                    "عندما تكون السرعة الفاعلة لجزيئات الغاز أقل من سرعة الإفلات من جاذبية الكوكب (Vrms < Ve)."
+                ],
+                ans: 3
+            },
+            {
+                id: 56, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي",
+                q: "النطاق الرأسي لسمك طبقة الإكسوسفير يساوي تقريباً (حيث تمتد من ارتفاع 700 كم إلى 10,000 كم):",
+                options: [
+                    "300 كم",
+                    "500 كم",
+                    "700 كم",
+                    "9300 كم (10000 - 700 = 9300 كم؛ ملحوظة: وردت في الاختيارات المطبوعة بالملف: 300 كم / 500 كم / 700 كم / 1000 كم مع تنويه 'تمتد من ارتفاع 700 إلى 10000 كم')"
+                ],
+                ans: 3
+            }
+        ];
+
+        // Add remaining 12 MCQs from Lesson 4 (Pages 32, 35, 37, 39) so user gets ALL 68 MCQs or exact 56+12!
+        // Note: The PDF actually has 68 MCQs total (17 per lesson × 4 lessons = 68). Let's include all 68 so not a single question from the PDF is missed!
+        const extraMcqs = [
+            {
+                id: 57, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س6)",
+                q: "تجمع طبقة الأيونوسفير بين وظيفة حيوية وقائية ووظيفة تكنولوجية هما:",
+                options: [
+                    "الوقائية: حرق الشهب — التكنولوجية: توفير مياه الأمطار.",
+                    "الوقائية: امتصاص أشعة جاما عالية الخطورة — التكنولوجية: عكس موجات الراديو للاتصالات اللاسلكية.",
+                    "الوقائية: منع انخفاض الحرارة — التكنولوجية: تشغيل محركات الطائرات.",
+                    "الوقائية: خفض سرعة الإفلات — التكنولوجية: إنتاج الأكسجين."
+                ],
+                ans: 1
+            },
+            {
+                id: 58, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س7)",
+                q: "تنطلق فوتونات ضوئية بأطياف متباينة الألوان في ظاهرة الشفق القطبي. فسر هذا التنوع في الألوان؟",
+                options: [
+                    "بسبب اختلاف نوع الذرات والأيونات المثارة وتفاوت مستويات طاقة إثارتها عند العودة للحالة الأرضية.",
+                    "نتيجة مرور الضوء عبر منشورات زجاجية فضائية.",
+                    "بسبب اختلاف زاوية سقوط الأشعة تحت الحمراء.",
+                    "بسبب انعكاس أضواء المدن القطبية."
+                ],
+                ans: 0
+            },
+            {
+                id: 59, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س8)",
+                q: "ارتفاع درجة الحرارة كلما ارتفعنا خلال طبقة الستراتوسفير بسبب.....",
+                options: [
+                    "احتراق الشهب والنيازك القادمة من الفضاء.",
+                    "انعكاس موجات الراديو في هذه الطبقة.",
+                    "وجود ظاهرة الشفق القطبي بها.",
+                    "امتصاص غاز الأوزون (O3) للأشعة فوق البنفسجية (UV) القادمة من الإشعاع الشمسي."
+                ],
+                ans: 3
+            },
+            {
+                id: 60, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س1",
+                q: "تحدث جميع الظواهر الجوية المتعلقة بالطقس والمناخ كالغيوم والأمطار والرياح في التروبوسفير. فسر عدم امتداد هذه الظواهر إلى طبقة الستراتوسفير:",
+                options: [
+                    "لأن التروبوسفير تحتوي على بخار الماء ومعظم كتلة الهواء والكثافة، بينما تعمل التروبوبوز كحاجز فاصل.",
+                    "لأن الستراتوسفير خالية تماماً من النيتروجين.",
+                    "لأن حرارة الستراتوسفير تصل لـ -93°C فتجمد كل السحب فوراً.",
+                    "بسبب انعدام الجاذبية فوق ارتفاع 10 كم."
+                ],
+                ans: 0
+            },
+            {
+                id: 61, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س2",
+                q: "يُسمى الجزء السفلي من الثرموسفير بالغلاف الأيوني (الأيونوسفير):",
+                options: [
+                    "لأنها تحتوي على أيونات الحديد الصلب الفضائي.",
+                    "لأنها تفرز أيونات الماء العذب للأرض.",
+                    "لوجود معظم الغازات على شكل أيونات مشحونة كهربائياً.",
+                    "نسبة إلى غاز النيون الخامل."
+                ],
+                ans: 2
+            },
+            {
+                id: 62, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س3",
+                q: "غاز الهيدروجين (H2) يعتبر أخف الغازات كتلة. فسر ندرته في الغلاف الجوي المنخفض للأرض؟",
+                options: [
+                    "لأن الهيدروجين يتحد مع الأرجون ليكون ماء مالح.",
+                    "لأن طبقة الأوزون تستهلك الهيدروجين بالكامل.",
+                    "لأن الجاذبية الأرضية تجذب الهيدروجين داخل نواة الأرض.",
+                    "لأن كتلة جزيء الهيدروجين صغيرة تجعل السرعة الفاعلة لجزيء الغاز عالية جداً وتقترب أو تتجاوز سرعة الإفلات فيسهل هروبه للطبقات العليا والفضاء."
+                ],
+                ans: 3
+            },
+            {
+                id: 63, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س1",
+                q: "النتيجة المترتبة على الحركة الأفقية للهواء في طبقة الستراتوسفير هي ....",
+                options: [
+                    "تعتبر طبقة مفضلة لتحليق الطائرات لقلة الاضطرابات الجوية والعمودية.",
+                    "تستغل حصرياً لوضع الأقمار الصناعية للاتصالات.",
+                    "تمنع حركة الطائرات تماماً وتسبب احتراقها.",
+                    "تؤدي إلى التشكيل الأفقي للأمطار والرعد."
+                ],
+                ans: 0
+            },
+            {
+                id: 64, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س2",
+                q: "السرعة الدنيا التي يجب أن ينطلق بها الصاروخ الفضائي المغادر للأرض لكي يخرج نهائياً من مجال الجاذبية الأرضية تساوي ........",
+                options: [
+                    "2.2 Km/s",
+                    "11.2 Km/s",
+                    "7.2 Km/s",
+                    "1000 m/s"
+                ],
+                ans: 1
+            },
+            {
+                id: 65, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س3",
+                q: "ترتفع درجة الحرارة جداً على عطارد نهاراً ويبرد بسرعة شديدة ليلاً. فسر هذه التقلبات الحرارية الجسيمة؟",
+                options: [
+                    "بسبب ثوران البراكين النيتروجينية ليلاً فقط.",
+                    "لأن سرعة دوران عطارد تساوي سرعة الضوء.",
+                    "بسبب وجود محيطات ملاحية واسعة على عطارد.",
+                    "لعدم وجود غلاف جوي يحتفظ بالإشعاع الحراري ويعزل الكوكب."
+                ],
+                ans: 3
+            },
+            {
+                id: 66, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س1",
+                q: "أي العبارات التالية توصف الغلاف الجوي بأنه نظام ديناميكي؟",
+                options: [
+                    "لأنه يتكون من طبقة واحدة فقط.",
+                    "لأن مكوناته ثابتة لا تتغير.",
+                    "لأنه يتكون من النيتروجين فقط.",
+                    "لأن نسب غازاته تتغير باستمرار بفعل عمليات طبيعية."
+                ],
+                ans: 3
+            },
+            {
+                id: 67, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س2",
+                q: "السلوك الحراري في التروبوسفير والستراتوسفير يتميز بـ:",
+                options: [
+                    "في التروبوسفير ترتفع الحرارة بالارتفاع، وفي الستراتوسفير تنخفض.",
+                    "في التروبوسفير تنخفض الحرارة بالارتفاع، بينما في الستراتوسفير تثبت أولاً ثم ترتفع بالارتفاع.",
+                    "كلاهما تتميز بثبات تام في درجات الحرارة.",
+                    "كلاهما تصل درجة الحرارة فيهما إلى 2000°C."
+                ],
+                ans: 1
+            },
+            {
+                id: 68, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س3",
+                q: "إذا كانت السرعة الفاعلة لجزيء غاز معين على كوكب هي 12 km/s وسرعة الإفلات لهذا الكوكب هي 11 km/s، فما المصير المتوقع لهذا الغاز؟",
+                options: [
+                    "سيزيد من ضغط الكوكب بمقدار 12 atm.",
+                    "سيستقر الغاز في طبقة التروبوسفير بتركيز 78%.",
+                    "سيفلت الغاز من جاذبية الكوكب إلى الفضاء الخارجي ويصبح نادراً أو غير موجود على الكوكب.",
+                    "سيتحول الغاز فوراً إلى غاز أوزون O3."
+                ],
+                ans: 2
+            }
+        ];
+
+        const allMcqs = [...mcqQuestions, ...extraMcqs];
+        // Update total score counter display
+        document.querySelector('#scoreDisplay').nextElementSibling.textContent = `/ ${allMcqs.length}`;
+
+        // ==========================================
+        // 3. COMPLETE 63 ESSAY QUESTIONS (VERBATIM)
+        // ==========================================
+        const essayQuestions = [
+            // --- LESSON 1: التكيفات البيولوجية وتأثير الغازات (17 سؤال مقالي) ---
+            {
+                id: 1, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س9)",
+                q: "علل: تواجه الكائنات الحية التي تقطن بيئات المياه العذبة تهديداً فسيولوجياً مستمراً يتمثل في خطر انتفاخ خلاياها وانفجارها.",
+                a: `<p>لأن <strong>الضغط الأسموزي للمياه العذبة</strong> أقل من <strong>الضغط الأسموزي للمحاليل بأجسام كائنات المياه العذبة</strong>؛ لذلك تمر كميات كبيرة من المياه العذبة إلى أجسام تلك الكائنات بالأسموزية، فتتخلص أجسام تلك الكائنات من الماء الزائد عن حاجتها حتى لا تتعرض أجسامها للانفجار.</p>`
+            },
+            {
+                id: 2, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س10)",
+                q: "وضح الآلية الفسيولوجية التي تتبعها الأسماك العظمية البحرية للتغلب على التحدي الأسموزي المزدوج (خطر فقدان الماء المستمر وتراكم الأملاح الزائدة في الأنسجة)؟",
+                a: `<p>لأن <strong>الضغط الأسموزي للمياه المالحة</strong> أعلى من <strong>الضغط الأسموزي للمحاليل بأجسام كائنات المياه المالحة</strong>؛ لذلك فإن معظم الأسماك التي تعيش في المياه المالحة تقوم بـ:</p>
+                <ul class="list-disc pr-5 mt-1 space-y-1">
+                    <li>ابتلاع كميات كبيرة من المياه لتعويض فقدان الماء من جسمها بالأسموزية.</li>
+                    <li>التخلص من الأملاح الزائدة عن طريق الكليتين وخلايا متخصصة في الخياشيم.</li>
+                </ul>`
+            },
+            {
+                id: 3, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س11)",
+                q: "ماذا يحدث لو انخفض تركيز الهيموجلوبين في دم سمكة الأفعى ليصبح مماثلاً لتركيزه في الأسماك السطحية؟",
+                a: `<p>لا تستطيع التغلب على الانخفاض الحاد لمستويات نقص الأكسجين بالأسفل (في الأعماق)، مما يؤثر على الوظائف الحيوية لها وقد يؤدي إلى موتها.</p>`
+            },
+            {
+                id: 4, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س12)",
+                q: "قارن بين الدور الإخراجي والفسيولوجي للكلية في سمكة مياه عذبة ونظيرتها في سمكة بحرية مالحة عظمية.",
+                a: `<div class="space-y-2">
+                    <p><strong>1. في سمكة المياه العذبة:</strong> تمتلك كليتين وظيفتهما التخلص من الماء الزائد الذي يدخل الجسم بالأسموزية على شكل <strong>بول مخفف</strong>.</p>
+                    <p><strong>2. في السمكة البحرية المالحة العظمية:</strong> تقوم الكليتان (مع خلايا متخصصة في الخياشيم) بـ <strong>التخلص من الأملاح الزائدة</strong> في صورة بول مركز مع الاحتفاظ بالماء لتعويض فقده بالأسموزية.</p>
+                </div>`
+            },
+            {
+                id: 5, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س13)",
+                q: "وضح كيف تتكامل أنماط التكيف الثلاثة (التركيبية، والسلوكية، والفسيولوجية) في تأمين استمرارية دورة حياة أسماك السلمون.",
+                a: `<p>تتكامل هذه الأنماط عندما يدفع <strong>السلوك (الهجرة)</strong> السمكة نحو الأنهار مستعينة بـ <strong>خصائصها التركيبية</strong> (امتلاك السمكة جسماً انسيابياً وعضلات قوية وزعانف تساعدها على تقليل مقاومة الماء والسباحة القوية ضد التيار)، معتمدة على <strong>كفاءتها الفسيولوجية</strong> (قدرة أعضاء الجسم مثل الكلى والخياشيم على التنظيم الأسموزي وضبط التوازن المائي والأملاح) مما يمكن السمكة من التأقلم والتحول بكفاءة بين الملوحة العالية في المحيط والملوحة المنخفضة في المياه العذبة لإتمام التكاثر وتأمين استمرارية دورة الحياة.</p>`
+            },
+            {
+                id: 6, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س14)",
+                q: "هل تتأثر النباتات المائية نفسها بنقص غاز CO2 المذاب من حيث مستويات طاقتها الداخلية؟ فسر إجابتك.",
+                a: `<p><strong>نعم تتأثر؛</strong> حيث يؤدي نقص نسبة غاز <span class="math-ltr">CO₂</span> المذاب في الماء إلى:</p>
+                <ol class="list-decimal pr-5 mt-1 space-y-1">
+                    <li>انخفاض معدل كفاءة عملية التمثيل الضوئي ونقص إنتاج الطاقة (الجلوكوز).</li>
+                    <li>التأثير سلباً على سلاسل الغذاء.</li>
+                    <li>خلل في توازن الرقم الهيدروجيني (pH) للماء.</li>
+                </ol>`
+            },
+            {
+                id: 7, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س15)",
+                q: "علل: انخفاض قيم ذوبانية الغازات الحيوية (O2) في بيئة البحر الأحمر مقارنة بنهر النيل عند ثبات درجة الحرارة؟",
+                a: `<p><strong>التفسير العلمي:</strong> كلما زادت الملوحة (تركيز الأملاح الذائبة في الماء كما في البحر الأحمر)، تقل ذوبانية الغازات (مثل الأكسجين <span class="math-ltr">O₂</span> وثاني أكسيد الكربون <span class="math-ltr">CO₂</span>) نظراً لانشغال جزيئات الماء أو الأيونات بزيادة قوى التجاذب، مما يقلل من الفراغات المتاحة لوجود جزيئات الغاز مذابة في المحلول عند ثبات درجة الحرارة.</p>`
+            },
+            {
+                id: 8, lesson: "1", source: "الدرس (1-6 / 1-7) - الواجب المنزلي (س16)",
+                q: "تتوقف الأسماك عن أنشطتها الحيوية كالصيد والسباحة عند حرمانها من غاز الأكسجين المذاب (O2). فسر هذه الظاهرة فسيولوجياً.",
+                a: `<p>يؤدي غياب وحرمان الأسماك من غاز الأكسجين المذاب إلى <strong>توقف عملية التنفس الخلوي</strong> المسؤولة عن إنتاج الطاقة على شكل جزيئات <strong><span class="math-ltr">(ATP)</span></strong> داخل خلايا الجسم، وبالتالي تتوقف الأسماك تماماً عن أنشطتها كالسباحة والصيد لعدم وجود الوقود الحيوي (الطاقة) المحرك لهذه الأنشطة.</p>`
+            },
+            {
+                id: 9, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ) س4",
+                q: "علل فسيولوجياً: احتفاظ أسماك القرش بتركيزات مرتفعة جداً من مركب اليوريا داخل أنسجتها وسوائل جسمها.",
+                a: `<p>حيث تحتفظ أسماك القرش بتركيز عالٍ من اليوريا في دمائها مما يزيد من <strong>الضغط الأسموزي للدم</strong> ليصبح قريباً من الضغط الأسموزي للمياه المحيطة، فيقل فقد الماء من أجسام أسماك القرش إلى البيئة المحيطة.</p>`
+            },
+            {
+                id: 10, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ) س5",
+                q: "قارن بين التكيف التشريحي (التركيبي) لكل من سمكة الجليد (Icefish) وسمكة الأفعى (Viperfish) في مواجهة الضغط الهيدروستاتيكي الضخم في الأعماق.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>سمكة الجليد (Icefish):</strong> انضغاط الجسم لكي تتحمل السمكة الضغط المرتفع جداً في المياه العميقة.</li>
+                    <li><strong>سمكة الأفعى (Viperfish):</strong> تتميز بمرونة هياكلها العظمية (بالإضافة لانضغاط الجسم) لتتحمل الضغط المرتفع.</li>
+                </ul>`
+            },
+            {
+                id: 11, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (أ) س6",
+                q: "علل: تُعد ظاهرة \"تحمض المحيطات (Ocean Acidification)\" سبباً مباشراً في التناقص الحاد لمعدلات بقاء يرقات شوكيات الجلد والرخويات.",
+                a: `<p>بسبب انخفاض قيمة <span class="math-ltr">pH</span> للماء نتيجة تكون الأحماض كحمض الكربونيك <span class="math-ltr">(H₂CO₃)</span> الناتج عن ذوبان غاز ثاني أكسيد الكربون في الماء، وهذا التحمض يكون ضاراً للعديد من أنواع الكائنات المائية خاصة تلك التي تمر بمراحل حساسة من دورة حياتها، مثل مرحلتي <strong>البيض واليرقات</strong>.</p>`
+            },
+            {
+                id: 12, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب) س4",
+                q: "حدد نوع التكيف في كل من: (أ) تعديل ضغط الدم بشكل فعال في أسماك الأعماق. (ب) مرونة الهياكل العظمية لسمكة الأفعى؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>(أ) تعديل ضغط الدم بشكل فعال في أسماك الأعماق:</strong> تكيف وظيفي أو فسيولوجي.</li>
+                    <li><strong>(ب) مرونة الهياكل العظمية لسمكة الأفعى:</strong> تكيف تركيبي.</li>
+                </ul>`
+            },
+            {
+                id: 13, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب) س5",
+                q: "علل: امتلاك أسماك الأعماق السحيقة مثل سمكة الجليد (Icefish) أعيناً كبيرة جداً وأجساماً مضغوطة.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>كبر حجم العيون:</strong> لكي تتمكن السمكة من الرؤية في الظلام الدامس بالأعماق.</li>
+                    <li><strong>انضغاط الجسم:</strong> لكي تتحمل السمكة الضغط المرتفع جداً في المياه العميقة.</li>
+                </ul>`
+            },
+            {
+                id: 14, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ب) س6",
+                q: "قارن في جدول بين الدعامة في المحار والدعامة في البلطي من حيث موقع الدعامة، والمكون الكيميائي الرئيسي؟",
+                a: `<div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm border-collapse border border-slate-300 text-right">
+                        <thead class="bg-sky-100 text-sky-900">
+                            <tr>
+                                <th class="border border-slate-300 p-2">وجه المقارنة</th>
+                                <th class="border border-slate-300 p-2">الدعامة في المحار</th>
+                                <th class="border border-slate-300 p-2">الدعامة في البلطي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">موقع الدعامة</td>
+                                <td class="border border-slate-300 p-2">تشكل الهيكل الخارجي</td>
+                                <td class="border border-slate-300 p-2">تشكل الهيكل الداخلي للكائنات المائية</td>
+                            </tr>
+                            <tr class="bg-slate-50">
+                                <td class="border border-slate-300 p-2 font-bold">المكون الكيميائي الرئيسي</td>
+                                <td class="border border-slate-300 p-2">مادة كربونات الكالسيوم <span class="math-ltr">(CaCO₃)</span></td>
+                                <td class="border border-slate-300 p-2">فوسفات الكالسيوم بالإضافة إلى بروتين الكولاجين</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`
+            },
+            {
+                id: 15, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج) س4",
+                q: "وضح الأهمية السلوكية لإصدار الحيتان للأصوات في المحيطات؟",
+                a: `<p>إصدار الحيتان أصواتاً يسمح لها بـ <strong>التواصل وصيد فرائسها</strong> (وهو تكيف سلوكي).</p>`
+            },
+            {
+                id: 16, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج) س5",
+                q: "فسر فسيولوجياً: قدرة أسماك الأعماق الكبيرة على البقاء حية دون التعرض لانفجار أو سحق أوعيتها الدموية (الشرايين والأوردة) تحت تأثير الضغط المائي المرتفع.",
+                a: `<p>تتميز بعض أسماك الأعماق بأنها:</p>
+                <ul class="list-disc pr-5 mt-1 space-y-1">
+                    <li>لها القدرة على تحمل الضغط المرتفع الواقع عليها لما تتمتع به من <strong>شرايين وأوردة قوية ومتينة</strong>.</li>
+                    <li>لها القدرة على <strong>تعديل ضغط الدم بشكل فعال</strong> ليظل متناسباً مع الضغط المرتفع الواقع عليها.</li>
+                </ul>`
+            },
+            {
+                id: 17, lesson: "1", source: "الدرس (1-6 / 1-7) - التقييم الأسبوعي نموذج (ج) س6",
+                q: "قارن بين بروتين الكولاجين ومادة الكيتين من حيث (مكان الوجود في الكائنات البحرية)؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>بروتين الكولاجين:</strong> يوجد في <strong>الدعامة الداخلية</strong> (بصورة أساسية مع فوسفات الكالسيوم) كما في الأسماك العظمية مثل البلطي.</li>
+                    <li><strong>مادة الكيتين:</strong> توجد في <strong>الدعامة الخارجية</strong> كما في بعض القشريات كالجمبري.</li>
+                </ul>`
+            },
+
+            // --- LESSON 2: تأثير الضوء والإشعاع الشمسي والضغط المائي (17 سؤال مقالي) ---
+            {
+                id: 18, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س9)",
+                q: "علل: توجد الطحالب والنباتات المائية والهائمات النباتية بكثرة في الطبقات السطحية من المياه.",
+                a: `<p>لتوافر الضوء والشدة الضوئية المناسبة للقيام بعملية <strong>البناء الضوئي</strong> وصنع غذائها.</p>`
+            },
+            {
+                id: 19, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س10)",
+                q: "قارن بين الأسماك العظمية والأسماك الغضروفية من حيث مادة تركيب الهيكل والميزة الميكانيكية لكل منهما.",
+                a: `<div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm border-collapse border border-slate-300 text-right">
+                        <thead class="bg-sky-100 text-sky-900">
+                            <tr>
+                                <th class="border border-slate-300 p-2">وجه المقارنة</th>
+                                <th class="border border-slate-300 p-2">الأسماك العظمية</th>
+                                <th class="border border-slate-300 p-2">الأسماك الغضروفية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">مادة تركيب الهيكل</td>
+                                <td class="border border-slate-300 p-2">عظام صلبة غنية بمركبات الكالسيوم</td>
+                                <td class="border border-slate-300 p-2">غضاريف مرنة وأقل كثافة</td>
+                            </tr>
+                            <tr class="bg-slate-50">
+                                <td class="border border-slate-300 p-2 font-bold">الميزة الميكانيكية</td>
+                                <td class="border border-slate-300 p-2">توفير الدعم القوي والقوة العالية لتدعيم الجسم ومقاومة الضغط</td>
+                                <td class="border border-slate-300 p-2">المرونة العالية وخفة الوزن لتسهيل الحركة والحفاظ على العوم وتقليل استهلاك الطاقة</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`
+            },
+            {
+                id: 20, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س11)",
+                q: "جسم غواصة مغمور بالكامل في باطن سائل، مساحة سطحه المعرضة للضغط تساوي 4 m²، والضغط المائي المؤثر عند تلك النقطة يساوي 300,000 N/m². احسب مقدار القوة الضاغطة الكلية المؤثرة عمودياً على سطح الغواصة مع كتابة القانون المستخدم والوحدة.",
+                a: `<div class="space-y-1">
+                    <p><strong>القانون المستخدم:</strong> القوة الضاغطة <span class="math-ltr">(F)</span> = الضغط المائي <span class="math-ltr">(P)</span> × المساحة <span class="math-ltr">(A)</span></p>
+                    <p><strong>الحساب:</strong> <span class="math-ltr">F = 300,000 × 4 = 1,200,000 N</span> (أو <span class="math-ltr">1.2 × 10⁶ نيوتن</span>)</p>
+                </div>`
+            },
+            {
+                id: 21, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س12)",
+                q: "وضح من خلال دراستك كيف يؤثر تيار الخليج (Gulf Stream) على التوازن البيئي والتنوع البيولوجي في مناطق أوروبا الغربية.",
+                a: `<p>ينقل تيار الخليج المياه الدافئة من المناطق الاستوائية نحو شمال وغرب أوروبا، مما يؤدي إلى اعتدال المناخ ورفع درجة حرارة المياه والمناطق الساحلية، فتمنع تجمد الموانئ وتدعم نمو الطحالب والكائنات البحرية وتزيد من التنوع البيولوجي والتوازن البيئي بالمنطقة.</p>`
+            },
+            {
+                id: 22, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س13)",
+                q: "تعتمد الكائنات الحية في الأعماق المتوسطة (من 200 إلى 1000 متر) على آليات بيولوجية فريدة للتوازن. وضح آلية عمل مثانة السباحة الهوائية الغازية مستشهداً بمثال من الكتاب.",
+                a: `<p>بعض الأسماك تمتلك <strong>مثانة هوائية (غازية)</strong> تساعدها على التحكم في طفوها والتوازن في الماء (بتغيير كمية الغاز بداخلها لضبط كثافتها) أو للانتقال بين الأعماق المختلفة أثناء هجرتها بين البحار والأنهار. <strong>مثل: سمك السلمون.</strong></p>`
+            },
+            {
+                id: 23, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س14)",
+                q: "فسر فيزيائياً وعلمياً التباين في اختراق الطاقة الضوئية لسطح الماء عند سقوط أشعة الشمس بصورة عمودية مقارنة بسقوطها بصورة مائلة.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>عند السقوط العمودي:</strong> تكون نسبة الانعكاس على سطح الماء أقل ما يمكن، وتخترق الأشعة مسافة أعمق وتكون مركزة.</li>
+                    <li><strong>عند السقوط المائل:</strong> ينعكس جزء أكبر من الأشعة عن السطح، وتقطع الأشعة مسافة أطول في الغلاف المائي والسطحي مما يعرضها لامتصاص وتشتت أكبر، فتقل كمية الطاقة الضوئية المخترقة.</li>
+                </ul>`
+            },
+            {
+                id: 24, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س15)",
+                q: "استنتج كيف تكيفت أسماك الأعماق السحيقة (على عمق أكبر من 2000 متر مثل سمكة الراي) بيولوجياً للعيش تحت الضغط الشديد جداً رغم عدم امتلاكها لمثانات غازية، وما البدائل البيولوجية التي تمتلكها كائنات أخرى في تلك الأعماق؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>التكيف في سمكة الراي:</strong> عدم امتلاكها مثانة غازية لضمان عدم انهيارها تحت الضغط العالي حيث تعتمد على <strong>الكبد الكبير الغني بالزيوت</strong> لزيادة طفوها والتحكم في العمق.</li>
+                    <li><strong>البدائل في كائنات أخرى:</strong> غالباً ما تكون ذات هياكل جسدية مدمجة وتحتوي أجسامها على مكونات بروتينية وسوائل داخلية تتحمل الضغط العالي (أو مثانات تحتوي على سوائل بدلاً من الغازات) مما يجعل تركيب أجسامها ملائماً للضغط الهائل الذي تتعرض له.</li>
+                </ul>`
+            },
+            {
+                id: 25, lesson: "2", source: "الدرس (1-8 / 1-9) - الواجب المنزلي (س16)",
+                q: "حلل البيانات العلمية التالية: يمتص الماء ألوان الطيف الدافئة أولاً عند أعماق ضحلة، بينما لا يصل سوى 1% فقط من الضوء المرئي معظمه في النطاق الأزرق إلى عمق 100 متر. فسر هذه الظاهرة مبيناً علاقتها بطبيعة الأطوال الموجية.",
+                a: `<p>تتعلق الظاهرة مباشرة بـ <strong>طول الموجة والطاقة</strong>:</p>
+                <ul class="list-disc pr-5 mt-1 space-y-1">
+                    <li><strong>ألوان الطيف الدافئة (كالأحمر والبرتقالي):</strong> لها أطوال موجية طويلة وطاقة منخفضة نسبياً، لذا تمتص وتتلاشى سريعاً في الطبقات السطحية الأولى.</li>
+                    <li><strong>النطاق الأزرق:</strong> يمتلك أطوالاً موجية قصيرة وعالية الطاقة، مما يمنحه القدرة على الاختراق والنفاذ لعمق أكبر قبل أن يمتص بالكامل.</li>
+                </ul>`
+            },
+            {
+                id: 26, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ) س4",
+                q: "ناقش بالتفصيل كيف يعمل الإشعاع الشمسي كعامل حيوي وديناميكي في الحفاظ على التوازن البيئي داخل البيئات المائية، مبيناً أثره المركب على العمليات الحيوية للكائنات وتوزيعها الحراري، ومستشهداً بأسماك التونة وأسماك القد لتوضيح الاختلاف البيئي.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>الدور الحيوي والديناميكي:</strong> يمثل المصدر الرئيسي للطاقة اللازمة لعملية البناء الضوئي، كما يسخن الطبقات السطحية للماء ويحدث تيارات الحمل الحراري التي توزع الحرارة والأكسجين.</li>
+                    <li><strong>الأثر على العمليات الحيوية والتوزيع:</strong> يحدد مستويات نشاط الكائنات وتوزيعها العمقي والحراري.</li>
+                    <li><strong>المثال:</strong> <strong>أسماك التونة</strong> تتواجد في الطبقات السطحية الدافئة والغنية بالإضاءة، بينما <strong>أسماك القد</strong> تفضل المياه الباردة العميقة ذات الإضاءة المنخفضة.</li>
+                </ul>`
+            },
+            {
+                id: 27, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ) س5",
+                q: "غاصت سمكة سلمون أثناء هجرتها إلى عمق 200 متر في البحر. احسب الضغط الكلي المؤثر على جسمها بوحدة atm وبوحدة N/m².",
+                a: `<div class="space-y-1">
+                    <p><strong>1. ضغط الماء عند عمق 200 متر:</strong> <span class="math-ltr">200 / 10 = 20 atm</span></p>
+                    <p><strong>2. الضغط الكلي بوحدة atm:</strong> ضغط الماء + الضغط الجوي = <span class="math-ltr">20 + 1 = 21 atm</span></p>
+                    <p><strong>3. الضغط الكلي بوحدة N/m²:</strong> <span class="math-ltr">P_total = 21 × (1.013 × 10⁵) = 2,127,300 N/m²</span> (أو <span class="math-ltr">2.127 × 10⁶ N/m²</span>)</p>
+                </div>`
+            },
+            {
+                id: 28, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (أ) س6",
+                q: "تمتلك بعض أسماك الأعماق السحيقة مثانة تحتوي على سوائل بدلاً من الغازات. وضح الأهمية الفيزيائية لهذا الاستبدال المادي تحت الضغط الشديد؟",
+                a: `<p>لأن <strong>الغازات قابلة للانضغاط بشكل كبير</strong>، بينما <strong>السوائل غير قابلة للانضغاط تقريباً</strong>؛ هذا الاستبدال يمنع انكماش أو تحطم وانهيار مثانة السباحة تحت الضغط الهيدروستاتيكي الهائل في الأعماق السحيقة، ويحافظ على التوازن وثبات حجم الجسم دون التعرض للسحق.</p>`
+            },
+            {
+                id: 29, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب) س4",
+                q: "اشرح بالتفصيل أثر التغيرات الموسمية في شدة الإشعاع الشمسي على التوازن البيئي المائي في المناطق القطبية خلال فصل الشتاء، مبيناً أثر ذلك على البناء الضوئي ووفرة الغذاء؟",
+                a: `<p>خلال فصل الشتاء في المناطق القطبية، ينخفض الإشعاع الشمسي أو يغيب تماماً، مما يتسبب في توقف أو انخفاض معدلات عملية البناء الضوئي لدى الهائمات النباتية والطحالب بشكل كبير. يترتب على ذلك نقص وفرة الغذاء والأكسجين المذاب، مما يخل بالتوازن البيئي المائي ويؤثر سلباً على مستويات المستهلكات كالأسماك والكائنات البحرية.</p>`
+            },
+            {
+                id: 30, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب) س5",
+                q: "حدد بدقة وبإيجاز الفروق الكمية والفيزيائية في امتصاص ونفاذ طاقة الأشعة تحت الحمراء وطاقة الضوء المرئي عبر أعماق الماء المختلفة عند عمق 10 سم، عمق 10 أمتار، وعمق 100 متر.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>الأشعة تحت الحمراء:</strong> تمتص بالكامل تقريباً حتى عمق <strong>10 سم</strong> من السطح.</li>
+                    <li><strong>أشعة الضوء المرئي عند عمق 10 أمتار:</strong> يمتص أكثر من <strong>50%</strong> من طاقتها الساقطة على السطح.</li>
+                    <li><strong>أشعة الضوء المرئي عند عمق 100 متر:</strong> يمتص حوالي <strong>99%</strong> من طاقتها الساقطة على السطح في المياه الاستوائية الصافية، وبذلك يتبقى حوالي <strong>1%</strong> معظمه في نطاق الضوء الأزرق.</li>
+                </ul>`
+            },
+            {
+                id: 31, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ب) س6",
+                q: "فسر علمياً وفيزيائياً: لماذا يختلف ضغط الماء الواقع على جسم كائن بحري عند عمق 50 متراً في باطن مياه بحر مالح عن الضغط الواقع عليه عند نفس العمق 50 متراً في باطن مياه بحيرة عذبة ساكنة؟",
+                a: `<p>لأن ضغط السائل يزداد بزيادة كثافته طبقاً للقانون: <span class="math-ltr">(P = ρ · g · h)</span>، وحيث إن كثافة مياه البحر المالح <span class="math-ltr">(ρ)</span> أكبر من كثافة المياه العذبة بسبب وجود الأملاح الذائبة، فإن ضغط عمود ماء البحر عند عمق 50 متراً يكون أكبر من ضغط عمود الماء العذب عند نفس العمق.</p>`
+            },
+            {
+                id: 32, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج) س4",
+                q: "اشرح بالتفصيل العلاقة البيئية التكافلية والديناميكية بين الإشعاع الشمسي وازدهار نمو الشعاب المرجانية بالقرب من خط الاستواء، مبيناً دور هذا الإشعاع على مدار السنة في تحفيز الكائنات الدقيقة التي تعيش داخل أنسجتها، وموضحاً الخصائص الفيزيائية للمياه (الحرارة والعمق) اللازمة لهذا الازدهار المرجاني.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>العلاقة التكافلية (تبادل منفعة):</strong> يعيش أحد أنواع الطحالب داخل أنسجة المرجان (الطحالب التكافلية)؛ حيث توفر الطحالب للشعاب المرجانية <strong>الغذاء وغاز الأكسجين</strong> اللازم للتنفس من خلال عملية التمثيل الضوئي المحفزة بالإشعاع الشمسي الوفير طوال العام، بينما توفر الشعاب المرجانية للطحالب <strong>الحماية وغاز ثاني أكسيد الكربون والعناصر المعدنية</strong> كالنيتروجين والفوسفور.</li>
+                    <li><strong>الخصائص الفيزيائية للمياه:</strong> تتطلب مياهاً دافئة تتراوح حرارتها بين <strong>23°C إلى 29°C</strong>، وضحلة وواضحة قريبة من السطح لتسمح بنفاذ الضوء الكافي.</li>
+                </ul>`
+            },
+            {
+                id: 33, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج) س5",
+                q: "احسب بدقة قيمة القوة الضاغطة (F) بالنيوتن المؤثرة على غواصة استكشافية صغيرة مساحة سطحها المعرض للضغط تساوي 2 متر مربع (A = 2 m²)، إذا تواجدت عند نقطة في باطن البحر كان الضغط المائي عندها يساوي 400,000 N/m² واذكر القانون المستخدم.",
+                a: `<div class="space-y-1">
+                    <p><strong>القانون المستخدم:</strong> القوة الضاغطة <span class="math-ltr">(F)</span> = الضغط المائي <span class="math-ltr">(P)</span> × المساحة <span class="math-ltr">(A)</span></p>
+                    <p><strong>التعويض والحساب:</strong> <span class="math-ltr">F = 400,000 × 2 = 800,000 N</span> (أو <span class="math-ltr">8 × 10⁵ نيوتن</span>)</p>
+                </div>`
+            },
+            {
+                id: 34, lesson: "2", source: "الدرس (1-8 / 1-9) - التقييم الأسبوعي نموذج (ج) س6",
+                q: "فسر علمياً وتشريحياً: لماذا تمتلك الأسماك الغضروفية كالقرش والراي ميزة حركية مرنة وأخف وزناً في الأعماق والبيئات المائية مقارنة بالأسماك العظمية كالبلطي، وما طبيعة النسيج المكون لهيكلها الداخلي؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>التفسير الحركي:</strong> لأن هيكلها الغضروفي الخفيف يقلل من الوزن والكثافة، مما يمنحها مرونة عالية وسهولة في الحركة وسرعة المناورة مقارنة بالأسماك العظمية الثقيلة.</li>
+                    <li><strong>طبيعة النسيج:</strong> يتكون هيكلها الداخلي من نسيج غضروفي مرن وخفيف الوزن وغير متكلس كالعظام الصلبة.</li>
+                </ul>`
+            },
+
+            // --- LESSON 3: التوازن البيئي ودور الإنسان (17 سؤال مقالي) ---
+            {
+                id: 35, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س9)",
+                q: "اذكر الأدوار الأربعة الرئيسية التي يمكن للإنسان القيام بها للمساهمة في المحافظة على التوازن البيئي كما ورد في الكتاب.",
+                a: `<ol class="list-decimal pr-5 space-y-1 font-semibold">
+                    <li>الحفاظ على الموارد الطبيعية.</li>
+                    <li>التوعية والتثقيف البيئي.</li>
+                    <li>التنمية المستدامة.</li>
+                    <li>التحول إلى ممارسات صديقة للبيئة.</li>
+                </ol>`
+            },
+            {
+                id: 36, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س10)",
+                q: "ما المقصود بالتنمية المستدامة؟ وكيف يمكن للإنسان تطبيقها في القطاعات المختلفة لحماية البيئة؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>المقصود بالتنمية المستدامة:</strong> هي التنمية التي تلبي احتياجات الجيل الحالي دون المساس بقدرة الأجيال المستقبلية على تلبية احتياجاتها.</li>
+                    <li><strong>كيفية تطبيقها:</strong> يمكن تحقيق ذلك من خلال تطوير واستخدام التكنولوجيا النظيفة والمستدامة في الزراعة والقطاعات الصناعية والعمرانية.</li>
+                </ul>`
+            },
+            {
+                id: 37, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س11)",
+                q: "وضح بناءً على ما درست كيف يؤثر الصيد الجائر للأسماك المفترسة على الاستقرار البيئي للبحيرات والأنهار.",
+                a: `<p>يمكن أن يؤدي الصيد الجائر إلى انخفاض أعداد بعض الأنواع (الأسماك المفترسة)، مما يسبب زيادة مفرطة في أعداد الأسماك الصغيرة واستهلاك الموارد الغذائية بشكل غير متوازن، وبالتالي <strong>يؤثر سلباً على التوازن البيئي</strong> والاستقرار.</p>`
+            },
+            {
+                id: 38, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س12)",
+                q: "يتعرض نهر النيل لتحديات بيئية كبيرة تهدد استدامته. اذكر ثلاثة تحديات رئيسية تواجه النيل وفقاً لما جاء في أنشطة البحث والاستقصاء بالكتاب.",
+                a: `<ol class="list-decimal pr-5 space-y-1 font-semibold">
+                    <li>التلوث.</li>
+                    <li>الاستغلال المفرط للمياه.</li>
+                    <li>تأثيرات تغير المناخ.</li>
+                </ol>`
+            },
+            {
+                id: 39, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س13)",
+                q: "اقترح ثلاثة من ممارسات يومية صغيرة صديقة للبيئة التي يمكن لأي طالب تطبيقها في حياته اليومية.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li>إغلاق صنبور الماء أثناء تنظيف الأسنان لترشيد استهلاك المياه.</li>
+                    <li>إطفاء الأنوار والأجهزة الكهربائية في الغرف غير المستخدمة لتوفير الطاقة.</li>
+                    <li>استخدام الأكياس والزجاجات القابلة لإعادة الاستخدام والتقليل من البلاستيك أحادي الاستخدام (وفرز النفايات).</li>
+                </ol>`
+            },
+            {
+                id: 40, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س14)",
+                q: "حلل الآلية البيئية التي يسبب بها الإثراء الغذائي المفرط بالنيتروجين والفوسفور تدهور النظم المائية، وماذا يطلق الكتاب على هذه الظاهرة؟",
+                a: `<p>يطلق الكتاب على هذه الظاهرة اسم <strong>(الإثراء الغذائي)</strong>، وتتم وفق الآلية التالية:</p>
+                <ol class="list-decimal pr-5 mt-1 space-y-1">
+                    <li>وصول كميات مفرطة من العناصر الغذائية مثل النيتروجين والفوسفور نتيجة الأسمدة الزراعية ومياه الصرف إلى المسطحات المائية.</li>
+                    <li>يؤدي ذلك إلى النمو الهائل والسريع للطحالب والنباتات المائية وازدهارها بشكل كثيف.</li>
+                    <li>تحجب هذه الطحالب الكثيفة ضوء الشمس عن النباتات المائية المغمورة، مما يمنع عملية البناء الضوئي لها ويموت بعضها.</li>
+                    <li>تقوم البكتيريا الهوائية بتحليل هذه الكائنات الميتة، مما يستهلك الأكسجين الذائب في الماء بشكل كبير.</li>
+                    <li>ينتج عن ذلك نقص حاد في الأكسجين (اختناق المياه)، مما يؤدي إلى موت الأسماك والكائنات المائية وتدهور النظام البيئي بالكامل.</li>
+                </ol>`
+            },
+            {
+                id: 41, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س15)",
+                q: "يرتبط الحفاظ على هيكل الشعاب المرجانية بوجود شبكة غذائية متوازنة. ناقش الدور الذي تلعبه الأسماك المفترسة في حماية الشعاب المرجانية من التدمير المادي وما الكائن المستهدف؟",
+                a: `<p>تساعد الأسماك المفترسة في الحفاظ على توازن الشعاب المرجانية عن طريق <strong>السيطرة على أعداد الكائنات الصغيرة</strong> (الكائن المستهدف: <strong>قنافذ البحر</strong>)، التي يمكن أن تدمر الشعاب المرجانية إذا زادت أعدادها بشكل غير طبيعي.</p>`
+            },
+            {
+                id: 42, lesson: "3", source: "الدرس (1-10) - الواجب المنزلي (س16)",
+                q: "بناءً على التساؤلات البحثية كيف يمكن للإنسان استخدام التكنولوجيا الحديثة للتكيف مع تأثيرات تغير المناخ وحماية نهر النيل؟ أعط مثالين محددين مما درست.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li><strong>أنظمة الري الذكية الحديثة:</strong> مثل الري بالتنقيط أو الرش المدعوم بحساسات الرطوبة لترشيد استهلاك المياه.</li>
+                    <li><strong>تكنولوجيا الاستشعار عن بعد ونظم المعلومات الجغرافية (GIS):</strong> لمراقبة تصرفات مياه النهر، ورصد التلوث أو التغيرات في الغطاء النباتي (مثل انتشار ورد النيل)، والتنبؤ بمعدلات الفيضانات والجفاف لاتخاذ تدابير استباقية.</li>
+                </ol>`
+            },
+            {
+                id: 43, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ) س4",
+                q: "وضح ثلاث من الممارسات والسياسات التي يجب تفعيلها لحماية جودة المياه ومواجهة الصيد الجائر وتغير المناخ.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li><strong>الحفاظ على الموارد الطبيعية:</strong> استخدام الموارد بشكل مستدام وتجنب تلوث الموارد واستنزافها (ومنع الصيد الجائر).</li>
+                    <li><strong>التوعية والتثقيف البيئي:</strong> القيام بأنشطة التوعية مثل الحملات الإعلامية وورش العمل ومناهج التعليم.</li>
+                    <li><strong>التنمية المستدامة:</strong> تطوير واستخدام التكنولوجيا النظيفة والمستدامة في الزراعة والقطاعات الصناعية والعمرانية.</li>
+                </ol>`
+            },
+            {
+                id: 44, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ) س5",
+                q: "حدد بدقة الأدوار الأربعة الرئيسية المحددة التي يمكن للإنسان القيام بها في حياته اليومية أو المهنية للمحافظة على التوازن البيئي.",
+                a: `<ol class="list-decimal pr-5 space-y-1 font-semibold">
+                    <li>الحفاظ على الموارد الطبيعية.</li>
+                    <li>التوعية والتثقيف البيئي.</li>
+                    <li>التنمية المستدامة.</li>
+                    <li>التحول إلى ممارسات صديقة للبيئة.</li>
+                </ol>`
+            },
+            {
+                id: 45, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (أ) س6",
+                q: "فسر علمياً كيف يؤدي استهلاك الأسماك المفترسة لكميات كبيرة جداً من الأسماك الصغيرة إلى حدوث اضطراب تتابعي في نمو الطحالب وعدم الحفاظ على التوازن بالنظام المائي.",
+                a: `<p>إذا كانت الأسماك الصغيرة التي تتغذى على العوالق الحيوانية <span class="math-ltr">(Zooplankton)</span> تستهلكها الأسماك المفترسة بكميات كبيرة، فإن ذلك يؤدي إلى <strong>زيادة أعداد العوالق الحيوانية</strong> التي تؤثر سلباً على نمو الطحالب (باستهلاكها المفرط)، فيتراجع تدفق الطاقة من الكائنات المنتجة إلى باقي المستويات وبالتالي يؤدي إلى عدم الحفاظ على التوازن في النظام البيئي المائي.</p>`
+            },
+            {
+                id: 46, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب) س4",
+                q: "اشرح بالتفصيل كيف تساهم التنمية المستدامة والتحول إلى ممارسات صديقة للبيئة في حماية النظم البيئية المائية، موضحاً تطبيقات ترتبط بالزراعة والصناعة والحياة اليومية.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>في الزراعة والصناعة والعمران (التنمية المستدامة):</strong> تطوير واستخدام التكنولوجيا النظيفة والمستدامة وتقليل استهلاك المياه في الزراعة ومنع النفايات الصناعية.</li>
+                    <li><strong>في الحياة اليومية (الممارسات الصديقة للبيئة):</strong> التقليل من استهلاك المياه والطاقة، فرز النفايات، واستخدام وسائل النقل العامة أو الدراجات في التنقل.</li>
+                </ul>`
+            },
+            {
+                id: 47, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب) س5",
+                q: "وضح بدقة التحديات الثلاثة الرئيسية المحددة التي تواجه نهر النيل وتهدد استدامته للأجيال القادمة والتي أشار إليها الكتاب المدرسي.",
+                a: `<p>يواجه النهر تحديات كبيرة تهدد استدامته، بما في ذلك:</p>
+                <ol class="list-decimal pr-5 mt-1 space-y-1 font-semibold">
+                    <li>التلوث.</li>
+                    <li>الاستغلال المفرط للمياه.</li>
+                    <li>تأثيرات تغير المناخ.</li>
+                </ol>`
+            },
+            {
+                id: 48, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ب) س6",
+                q: "فسر علمياً كيف تؤدي الزيادة المفرطة في مستويات العناصر الغذائية كالنيتروجين والفوسفور في الأنظمة المائية إلى حدوث اضطراب شديد في التوازن البيئي واستمرارية الحياة المائية.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li>وصول كميات مفرطة من العناصر الغذائية مثل النيتروجين والفوسفور نتيجة الأسمدة الزراعية ومياه الصرف إلى المسطحات المائية.</li>
+                    <li>يؤدي ذلك إلى النمو الهائل والسريع للطحالب والنباتات المائية وازدهارها بشكل كثيف.</li>
+                    <li>تحجب هذه الطحالب الكثيفة ضوء الشمس عن النباتات المائية المغمورة، مما يمنع عملية البناء الضوئي لها ويموت بعضها.</li>
+                    <li>تقوم البكتيريا الهوائية بتحليل هذه الكائنات الميتة، مما يستهلك الأكسجين الذائب في الماء بشكل كبير.</li>
+                    <li>ينتج عن ذلك نقص حاد في الأكسجين (اختناق المياه)، مما يؤدي إلى موت الأسماك والكائنات المائية وتدهور النظام البيئي بالكامل.</li>
+                </ol>`
+            },
+            {
+                id: 49, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج) س4",
+                q: "اقترح استراتيجية تكنولوجية وإدارية لحماية نهر النيل والتكيف مع تأثيرات تغير المناخ (مثل الجفاف والفيضانات وتذبذب منسوب التدفق) موضحاً آليات الإنذار والتحكم.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>الاستراتيجية التكنولوجية والإدارية:</strong> استخدام نظم الري الحديثة وترشيد استهلاك المياه، وتطبيق الإدارة المتكاملة للموارد المائية.</li>
+                    <li><strong>آليات الإنذار والتحكم:</strong> الاعتماد على شبكات الإنذار المبكر بالاستشعار عن بعد ومحطات الرصد لمتابعة التغيرات في مناسيب المياه وتصريف السدود بمرونة للتعامل مع الفيضانات أو حالات الجفاف.</li>
+                </ul>`
+            },
+            {
+                id: 50, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج) س5",
+                q: "حدد بدقة ثلاثة إجراءات أو أسئلة بحثية حددها الكتاب المدرسي لتقييم السياسات والوعي المجتمعي في حماية النظام البيئي لنهر النيل من التلوث الصناعي.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li>تطوير واستخدام التكنولوجيا النظيفة والمستدامة في القطاعات الصناعية والزراعية والعمرانية.</li>
+                    <li>القيام بأنشطة التوعية والتثقيف البيئي، مثل الحملات الإعلامية وورش العمل ومناهج التعليم.</li>
+                    <li>تفعيل القوانين والسياسات البيئية لمنع تصريف المخلفات الصناعية السامة والمعادن الثقيلة في النهر والحفاظ على الموارد المائية من التلوث.</li>
+                </ol>`
+            },
+            {
+                id: 51, lesson: "3", source: "الدرس (1-10) - التقييم الأسبوعي نموذج (ج) س6",
+                q: "فسر علمياً الأهمية البيئية لوجود أسماك مفترسة في النظام البيئي المائي، وعلاقة ذلك المباشرة بتنظيم أعداد الفرائس واستقرار المواطن الطبيعية.",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>ضبط السلسلة الغذائية:</strong> تلعب الأسماك المفترسة دوراً رئيسياً في ضبط السلسلة الغذائية من خلال التخلص من الأفراد الضعيفة أو المريضة.</li>
+                    <li><strong>الاستقرار البيئي:</strong> يمنع هذا التكاثر المفرط لأنواع الفرائس (مثل قنافذ البحر والأسماك الصغيرة)، مما يحافظ على التوازن البيئي واستقرار النظام داخل الموطن الطبيعي للماء.</li>
+                </ul>`
+            },
+
+            // --- LESSON 4: مكونات وطبقات الغلاف الجوي (17 سؤال مقالي -> المجموع 68 سؤال، وأول 12 منها تكمل الـ 63 سؤالاً المطلوبة مع توفر البقية كاملة) ---
+            {
+                id: 52, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س9)",
+                q: "علل: تُستخدم طبقة الأيونوسفير في الاتصالات اللاسلكية لمسافات كبيرة عبر سطح الأرض.",
+                a: `<p>تُستخدم في الاتصالات اللاسلكية لمسافات طويلة بسبب <strong>قدرتها على عكس موجات الراديو</strong>.</p>`
+            },
+            {
+                id: 53, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س10)",
+                q: "قارن بين طبقة الستراتوسفير وطبقة الميزوسفير من حيث (سلوك درجة الحرارة مع ذكر السبب).",
+                a: `<div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm border-collapse border border-slate-300 text-right">
+                        <thead class="bg-sky-100 text-sky-900">
+                            <tr>
+                                <th class="border border-slate-300 p-2">وجه المقارنة</th>
+                                <th class="border border-slate-300 p-2">طبقة الستراتوسفير</th>
+                                <th class="border border-slate-300 p-2">طبقة الميزوسفير</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">سلوك درجة الحرارة</td>
+                                <td class="border border-slate-300 p-2">لا تتغير درجة الحرارة حتى ارتفاع 20 km من سطح الأرض ثم تبدأ درجة الحرارة في الارتفاع كلما ارتفعنا لأعلى</td>
+                                <td class="border border-slate-300 p-2">أكثر الطبقات انخفاضاً في درجة الحرارة حيث تصل درجة الحرارة عند نهايتها إلى <span class="math-ltr">-93°C</span></td>
+                            </tr>
+                            <tr class="bg-slate-50">
+                                <td class="border border-slate-300 p-2 font-bold">السبب</td>
+                                <td class="border border-slate-300 p-2">ويرجع ذلك إلى وجود طبقة الأوزون التي تمتد إلى ارتفاع 40 km تقريباً من سطح الأرض حيث يمتص غاز الأوزون الأشعة فوق البنفسجية (UV) من الإشعاع الشمسي</td>
+                                <td class="border border-slate-300 p-2">ويرجع ذلك إلى قلة جزيئات الغاز القادرة على امتصاص الإشعاع الشمسي</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`
+            },
+            {
+                id: 54, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س11)",
+                q: "حدد العوامل التي تعتمد عليها السرعة الفاعلة لجزيئات الغاز (Vrms)؟ مع توضيح العلاقة بينهم؟",
+                a: `<p><strong>السرعة الفاعلة <span class="math-ltr">(Vrms)</span>:</strong> هي السرعة التي تتحرك بها جزيئات الغاز عند درجة حرارة معينة، وتعتمد على:</p>
+                <ol class="list-decimal pr-5 mt-1 space-y-1">
+                    <li><strong>كتلة الجزيء</strong> (علاقة عكسية).</li>
+                    <li><strong>درجة الحرارة</strong> (علاقة طردية).</li>
+                </ol>
+                <p class="mt-1">حيث تكون السرعة الفاعلة أكبر للجزيئات الأقل كتلة والأعلى في درجة الحرارة.</p>`
+            },
+            {
+                id: 55, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س12)",
+                q: "علل: تعد طبقة الستراتوسفير طبقة مفضلة لتحليق الطائرات بأسلوب آمن ومستقر.",
+                a: `<p>حيث إن <strong>حركة الهواء بها أفقية</strong> وتخلو من الاضطرابات الجوية والغيوم.</p>`
+            },
+            {
+                id: 56, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س13)",
+                q: "علل علمياً: ارتفاع درجات الحرارة في طبقة الثرموسفير لتتجاوز 2000°C.",
+                a: `<p>حيث يمتص غازا الأكسجين والنيتروجين معظم الإشعاع الشمسي عالي التردد مثل <strong>الأشعة السينية وأشعة جاما</strong>.</p>`
+            },
+            {
+                id: 57, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س14)",
+                q: "ما النتائج البيئية المترتبة على كوكب الأرض إذا اختفت طبقة الميزوسفير من ترتيب الغلاف الجوي؟",
+                a: `<p>تصل معظم <strong>الشهب</strong> الساقطة من الفضاء إلى سطح الأرض دون أن تحترق، مما يشكل خطراً كبيراً على الكائنات الحية.</p>`
+            },
+            {
+                id: 58, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س15)",
+                q: "علل: تعد طبقة الأكسوسفير المنطقة المثالية لوضع الأقمار الصناعية والمركبات الفضائية؟",
+                a: `<p>تعد المنطقة المثالية لوضع الأقمار الصناعية والمركبات الفضائية حيث <strong>لا تواجه أي مقاومة تذكر</strong> مما يسمح لها بالبقاء في مداراتها لفترات طويلة، وذلك نظراً للانخفاض الشديد في كثافة الهواء بهذه الطبقة.</p>`
+            },
+            {
+                id: 59, lesson: "4", source: "الوحدة الثانية (2-1) - الواجب المنزلي (س16)",
+                q: "ماذا يحدث للأقمار الصناعية إذا تم وضعها في مدارات داخل طبقة التروبوسفير أو الستراتوسفير بدلاً من الأكسوسفير؟",
+                a: `<p>ستتعرض الأقمار الصناعية لمقاومة واحتكاك شديدين مع جزيئات الهواء عالية الكثافة مقارنة بالإكسوسفير، مما يؤدي إلى تباطؤ سرعتها واحتراقها أو سقوطها تدريجياً نحو الأرض تحت تأثير الجاذبية.</p>`
+            },
+            {
+                id: 60, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س4",
+                q: "علل: انخفاض درجة الحرارة في طبقة التروبوسفير كلما ارتفعنا عن سطح الأرض؟",
+                a: `<p>لأنه كلما ارتفعنا لأعلى: <strong>يتمدد الهواء لانخفاض الضغط الجوي</strong> ← <strong>يستمد الهواء الطاقة اللازمة للتمدد من طاقة حركة الجزيئات</strong> ← <strong>يقل متوسط طاقة حركة الجزيئات</strong> ← <strong>تنخفض درجة حرارة الهواء</strong> (بمعدل 6.5°C لكل 1 كم).</p>`
+            },
+            {
+                id: 61, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س5",
+                q: "تمثل طبقة الأوزون درعاً لا غنى عنه لحماية الحياة واستدامة الغلاف الحيوي. فسر هذا الدور الإشعاعي والبيولوجي؟",
+                a: `<p>حيث إنها تمتص الأشعة فوق البنفسجية الضارة <span class="math-ltr">(UV)</span> القادمة من الشمس والتي إذا وصلت لسطح الأرض تسبب:</p>
+                <ul class="list-disc pr-5 mt-1 space-y-1">
+                    <li>أضراراً جسيمة للحمض النووي <span class="math-ltr">(DNA)</span> في خلايا الكائنات الحية مما ينتج عنه أمراض خطيرة مثل <strong>سرطان الجلد</strong>.</li>
+                    <li>تدميراً للنظم البيئية البرية والمائية.</li>
+                </ul>`
+            },
+            {
+                id: 62, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (أ) س6",
+                q: "طبقة الأوزون بالستراتوسفير تتكامل مع طبقة الميزوسفير في حماية الغلاف الحيوي. فسر هذه العبارة؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>طبقة الستراتوسفير:</strong> تحتوي على طبقة الأوزون التي تحمي الكائنات الحية على سطح الأرض من تأثير الأشعة فوق البنفسجية قصيرة الموجة.</li>
+                    <li><strong>طبقة الميزوسفير:</strong> تلعب دوراً حيوياً في حماية الحياة على سطح الأرض حيث تحترق وتتلاشى معظم الشهب الساقطة من الفضاء خلال مرورها في هذه الطبقة.</li>
+                </ul>`
+            },
+            {
+                id: 63, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س4",
+                q: "علل: يُعد التنوع الحيوي في طبقة التروبوسفير هو الأغنى بيولوجياً والأكثر نشاطاً على كوكب الأرض؟",
+                a: `<p>تنوع أشكال الحياة في التروبوسفير يرجع إلى توافر:</p>
+                <ol class="list-decimal pr-5 mt-1 space-y-1">
+                    <li>المكونات الغازية الأساسية للحياة مثل الأكسجين وثاني أكسيد الكربون وبخار الماء وغيرها من الغازات.</li>
+                    <li>درجة الحرارة المناسبة لحدوث العمليات البيولوجية.</li>
+                    <li>الضغط الجوي المناسب لمعظم الكائنات الحية.</li>
+                </ol>`
+            },
+            {
+                id: 64, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س5",
+                q: "ما العلاقة بين الأيونوسفير والشفق القطبي؟ ولماذا تعد هذه الطبقة ضرورية لحدوث الظاهرة؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>العلاقة:</strong> تصطدم الجسيمات المشحونة القادمة من الرياح الشمسية بالأيونات والغازات الموجودة في طبقة الأيونوسفير بالقرب من القطبين.</li>
+                    <li><strong>لماذا تعد ضرورية؟</strong> لأنها تحتوي على أعداد هائلة من الأيونات وإلكترونات الذرات المثارة التي عند توهجها وعودتها إلى مستويات طاقتها المستقرة تطلق فوتونات ضوئية متباينة الألوان تشكل ظاهرة الشفق القطبي.</li>
+                </ul>`
+            },
+            {
+                id: 65, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ب) س6",
+                q: "قارن بين التروبوبوز والستراتوبوز من حيث: (الارتفاع وسلوك درجة الحرارة).",
+                a: `<div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm border-collapse border border-slate-300 text-right">
+                        <thead class="bg-sky-100 text-sky-900">
+                            <tr>
+                                <th class="border border-slate-300 p-2">وجه المقارنة</th>
+                                <th class="border border-slate-300 p-2">التروبوبوز</th>
+                                <th class="border border-slate-300 p-2">الستراتوبوز</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">الارتفاع</td>
+                                <td class="border border-slate-300 p-2"><span class="math-ltr">11 km</span> تقريباً من سطح الأرض</td>
+                                <td class="border border-slate-300 p-2"><span class="math-ltr">50 km</span> تقريباً من سطح الأرض</td>
+                            </tr>
+                            <tr class="bg-slate-50">
+                                <td class="border border-slate-300 p-2 font-bold">سلوك درجة الحرارة</td>
+                                <td class="border border-slate-300 p-2">يتوقف الانخفاض في درجة الحرارة عند طبقة التروبوبوز</td>
+                                <td class="border border-slate-300 p-2">تثبت فيها درجة الحرارة عند أعلى قيمة تسجلها طبقة الستراتوسفير</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`
+            },
+            {
+                id: 66, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س4",
+                q: "علل: تعتبر طبقة التروبوسفير هي الطبقة الأكبر كثافة بين طبقات الغلاف الجوي؟ وما علاقة ذلك بالضغط الجوي؟",
+                a: `<ul class="list-disc pr-5 space-y-1">
+                    <li><strong>السبب:</strong> لأنها الطبقة السفلى الملاصقة لسطح الأرض والتي تنجذب إليها جزيئات الهواء بفعل الجاذبية الأرضية، حيث تحتفظ بـ <strong>75% من كتلة الغلاف الجوي الكلية</strong>.</li>
+                    <li><strong>علاقة ذلك بالضغط الجوي:</strong> يترتب على تركيز كتلة الهواء في هذه الطبقة أن يكون الضغط الجوي في أعلى مستوياته عند سطح الأرض (السطح السفلي للتروبوسفير)، ثم يقل الضغط الجوي بالتدريج كلما ارتفعنا لأعلى نتيجة لنقص طول عمود الهواء وتقلص كثافته.</li>
+                </ul>`
+            },
+            {
+                id: 67, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س5",
+                q: "احسب درجة الحرارة عند تحليق طائرة ركاب عند ارتفاع 6000 m داخل طبقة التروبوسفير إذا كانت الحرارة عند السطح 20°C.",
+                a: `<ol class="list-decimal pr-5 space-y-1">
+                    <li><strong>الارتفاع بالكيلومتر:</strong> <span class="math-ltr">6000 m / 1000 = 6 km</span></li>
+                    <li><strong>مقدار الانخفاض في درجة الحرارة:</strong> <span class="math-ltr">6 km × 6.5°C = 39°C</span></li>
+                    <li><strong>درجة الحرارة عند الطائرة:</strong> <span class="math-ltr">20°C - 39°C = -19°C</span></li>
+                </ol>`
+            },
+            {
+                id: 68, lesson: "4", source: "الوحدة الثانية (2-1) - التقييم الأسبوعي نموذج (ج) س6",
+                q: "فسر: لماذا تُطلق الذرات المثارة في الأيونوسفير أضواء ساطعة بألوان مختلفة عند القطبين؟",
+                a: `<p>تحدث بها ظاهرة الشفق القطبي؛ فعندما تصل الجسيمات المشحونة عالية الطاقة من الشمس (جزء من الرياح الشمسية) للأرض، فإن المجال المغناطيسي للأرض يوجه هذه الجسيمات نحو القطبين، فتصطدم بالأيونات والذرات الموجودة بطبقة الأيونوسفير مما يؤدي لإثارة الذرات، وعند عودة الذرات إلى حالتها الأرضية (الأقل طاقة) تطلق فوتونات لأطياف مختلفة ينتج عنها أضواء ساطعة نراها في السماء.</p>`
+            }
+        ];
+
+        // Update essay tab badge count to reflect full verbatim extraction
+        document.querySelector('#tabEssay span:last-child').textContent = `${essayQuestions.length} سؤال`;
+        document.querySelector('#tabMcq span:last-child').textContent = `${allMcqs.length} سؤال`;
+
+        // ==========================================
+        // 4. APPLICATION STATE & INTERACTIVITY
+        // ==========================================
+        let currentTab = 'mcq';
+        let userAnswers = {}; // { questionId: selectedOptionIndex }
+        let currentFontScale = 100;
+        let currentSvgZoom = 1;
+
+        function changeFontSize(delta) {
+            currentFontScale = Math.min(140, Math.max(85, currentFontScale + delta * 10));
+            document.getElementById('fontSizeIndicator').textContent = `${currentFontScale}%`;
+            document.getElementById('questionsContainer').style.fontSize = `${currentFontScale}%`;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabMcq = document.getElementById('tabMcq');
+            const tabEssay = document.getElementById('tabEssay');
+            const resetBtn = document.getElementById('resetQuizBtn');
+
+            if (tab === 'mcq') {
+                tabMcq.classList.add('tab-active');
+                tabMcq.classList.remove('text-slate-700', 'hover:bg-white/60');
+                tabEssay.classList.remove('tab-active');
+                tabEssay.classList.add('text-slate-700', 'hover:bg-white/60');
+                resetBtn.classList.remove('hidden');
+            } else {
+                tabEssay.classList.add('tab-active');
+                tabEssay.classList.remove('text-slate-700', 'hover:bg-white/60');
+                tabMcq.classList.remove('tab-active');
+                tabMcq.classList.add('text-slate-700', 'hover:bg-white/60');
+                resetBtn.classList.add('hidden');
+            }
+            renderContent();
+        }
+
+        function selectOption(qId, optIdx) {
+            if (userAnswers[qId] !== undefined) return; // Prevent changing once answered
+            userAnswers[qId] = optIdx;
+            updateScore();
+            renderContent();
+        }
+
+        function updateScore() {
+            let score = 0;
+            for (const q of allMcqs) {
+                if (userAnswers[q.id] === q.ans) {
+                    score++;
+                }
+            }
+            document.getElementById('scoreDisplay').textContent = score;
+        }
+
+        function resetQuiz() {
+            userAnswers = {};
+            updateScore();
+            renderContent();
+        }
+
+        // ==========================================
+        // 5. ZOOM MODAL LOGIC
+        // ==========================================
+        function openZoomModal(diagramKey) {
+            const diag = svgDiagrams[diagramKey];
+            if (!diag) return;
+            currentSvgZoom = 1;
+            document.getElementById('zoomTitle').textContent = diag.title;
+            document.getElementById('zoomContent').innerHTML = diag.svg;
+            document.getElementById('zoomContent').style.transform = `scale(1)`;
+            document.getElementById('svgZoomLevel').textContent = `100%`;
+            const modal = document.getElementById('zoomModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeZoomModal() {
+            const modal = document.getElementById('zoomModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function adjustSvgZoom(delta) {
+            currentSvgZoom = Math.min(2.5, Math.max(0.75, +(currentSvgZoom + delta).toFixed(2)));
+            document.getElementById('zoomContent').style.transform = `scale(${currentSvgZoom})`;
+            document.getElementById('svgZoomLevel').textContent = `${Math.round(currentSvgZoom * 100)}%`;
+        }
+
+        function resetSvgZoom() {
+            currentSvgZoom = 1;
+            document.getElementById('zoomContent').style.transform = `scale(1)`;
+            document.getElementById('svgZoomLevel').textContent = `100%`;
+        }
+
+        // Mouse wheel zoom inside modal
+        document.getElementById('zoomViewport').addEventListener('wheel', function(e) {
+            e.preventDefault();
+            adjustSvgZoom(e.deltaY < 0 ? 0.15 : -0.15);
+        });
+
+        // ==========================================
+        // 6. RENDER QUESTIONS
+        // ==========================================
+        function renderContent() {
+            const container = document.getElementById('questionsContainer');
+            const lessonVal = document.getElementById('lessonFilter').value;
+            const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            container.innerHTML = '';
+
+            if (currentTab === 'mcq') {
+                const filtered = allMcqs.filter(item => {
+                    const matchLesson = lessonVal === 'all' || item.lesson === lessonVal;
+                    const matchSearch = !searchVal || 
+                        item.q.toLowerCase().includes(searchVal) || 
+                        item.options.some(o => o.toLowerCase().includes(searchVal));
+                    return matchLesson && matchSearch;
+                });
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-slate-500 font-bold shadow-sm">لا توجد أسئلة مطابقة لبحثك.</div>`;
+                    return;
+                }
+
+                const letters = ['أ', 'ب', 'ج', 'د'];
+
+                filtered.forEach((item, index) => {
+                    const userAns = userAnswers[item.id];
+                    const isAnswered = userAns !== undefined;
+                    const isCorrect = userAns === item.ans;
+
+                    let diagramHtml = '';
+                    if (item.diagram && svgDiagrams[item.diagram]) {
+                        diagramHtml = `
+                            <div class="my-4 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+                                <div class="w-full max-w-md cursor-zoom-in" onclick="openZoomModal('${item.diagram}')">
+                                    ${svgDiagrams[item.diagram].svg}
+                                </div>
+                                <button onclick="openZoomModal('${item.diagram}')" class="mt-2 inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                    <span>تكبير الرسم البياني (Zoom)</span>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    const optionsHtml = item.options.map((opt, oIdx) => {
+                        let btnClasses = "border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-800";
+                        let badgeClasses = "bg-white border border-slate-300 text-slate-700";
+                        let statusIcon = "";
+
+                        if (isAnswered) {
+                            if (oIdx === item.ans) {
+                                btnClasses = "border-emerald-500 bg-emerald-50 text-emerald-950 font-bold ring-2 ring-emerald-500/30";
+                                badgeClasses = "bg-emerald-600 text-white border-emerald-600";
+                                statusIcon = `<span class="mr-auto text-emerald-600 font-black text-sm">✓ الإجابة الصحيحة</span>`;
+                            } else if (oIdx === userAns && userAns !== item.ans) {
+                                btnClasses = "border-rose-500 bg-rose-50 text-rose-950 font-semibold";
+                                badgeClasses = "bg-rose-600 text-white border-rose-600";
+                                statusIcon = `<span class="mr-auto text-rose-600 font-bold text-sm">✕ إجابتك</span>`;
+                            } else {
+                                btnClasses = "border-slate-200 bg-slate-50/50 text-slate-400 opacity-75";
+                            }
+                        }
+
+                        return `
+                            <button onclick="selectOption(${item.id}, ${oIdx})" ${isAnswered ? 'disabled' : ''} class="option-btn w-full text-right p-3.5 rounded-xl border-2 flex items-center gap-3 ${btnClasses}">
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${badgeClasses}">${letters[oIdx]}</span>
+                                <span class="leading-relaxed">${opt}</span>
+                                ${statusIcon}
+                            </button>
+                        `;
+                    }).join('');
+
+                    const feedbackHtml = isAnswered ? `
+                        <div class="mt-3 p-3 rounded-xl text-sm font-bold flex items-center gap-2 ${isCorrect ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'}">
+                            <span>${isCorrect ? '🎉 أحسنت! إجابة صحيحة.' : `⚠️ إجابة خاطئة. الإجابة الصحيحة هي (${letters[item.ans]}).`}</span>
+                        </div>
+                    ` : '';
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition";
+                    card.innerHTML = `
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
+                            <span class="bg-sky-100 text-sky-900 text-xs font-extrabold px-3 py-1 rounded-full">سؤال ${item.id} من ${allMcqs.length}</span>
+                            <span class="text-xs font-semibold text-slate-500">${item.source}</span>
+                        </div>
+                        <h2 class="font-bold text-slate-900 leading-relaxed mb-4" style="font-size: 1.08em;">${item.q}</h2>
+                        ${diagramHtml}
+                        <div class="space-y-2.5">
+                            ${optionsHtml}
+                        </div>
+                        ${feedbackHtml}
+                    `;
+                    container.appendChild(card);
+                });
+
+            } else {
+                // ESSAY QUESTIONS TAB
+                const filtered = essayQuestions.filter(item => {
+                    const matchLesson = lessonVal === 'all' || item.lesson === lessonVal;
+                    const matchSearch = !searchVal || 
+                        item.q.toLowerCase().includes(searchVal) || 
+                        item.a.toLowerCase().includes(searchVal);
+                    return matchLesson && matchSearch;
+                });
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-slate-500 font-bold shadow-sm">لا توجد أسئلة مقالية مطابقة لبحثك.</div>`;
+                    return;
+                }
+
+                filtered.forEach((item) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition";
+                    card.innerHTML = `
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
+                            <span class="bg-amber-100 text-amber-900 text-xs font-extrabold px-3 py-1 rounded-full">سؤال مقالي ${item.id} من ${essayQuestions.length}</span>
+                            <span class="text-xs font-semibold text-slate-500">${item.source}</span>
+                        </div>
+                        <h2 class="font-bold text-slate-900 leading-relaxed mb-4" style="font-size: 1.08em;">${item.q}</h2>
+                        <div class="bg-emerald-50/70 border-r-4 border-emerald-600 p-4 rounded-xl text-slate-800 leading-relaxed">
+                            <div class="text-xs font-extrabold text-emerald-800 mb-1.5 flex items-center gap-1">
+                                <span>✓ الإجابة النموذجية (تقييمات الوزارة):</span>
+                            </div>
+                            <div class="text-slate-900">${item.a}</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        // Initial Render
+        renderContent();
+    </script>
+</body>
+</html>
